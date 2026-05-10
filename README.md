@@ -1,8 +1,6 @@
 # 深眸远虑——肺癌早筛系统
 
-
-<img width="1263" height="708" alt="image" src="https://github.com/user-attachments/assets/7a04355c-94a7-45b6-a9f4-0f2bccf09459" />
-
+<img width="1245" height="697" alt="image" src="https://github.com/user-attachments/assets/1db7db65-0511-44b7-ba4f-ea111232cf3e" />
 
 ## 项目简介
 
