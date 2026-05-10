@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智瞳 - 结肠息肉智能识别系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-blue: #1A73E8;
+            --medical-blue: #0D6EFD;
+            --medical-green: #34A853;
+            --text-dark: #2D3748;
+            --light-blue: #E3F2FD;
+            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+        }
+        body {
+            font-family: 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            line-height: 1.6;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+        /* 平滑滚动 */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* 导航栏美化 */
+       .navbar {
+            padding: 1rem 0;
+            box-shadow: var(--shadow-sm);
+            background-color: rgba(255, 255, 255, 0.95)!important;
+            backdrop-filter: blur(10px);
+        }
+       .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--medical-blue);
+            display: flex;
+            align-items: center;
+        }
+       .navbar-brand img {
+            margin-right: 10px;
+        }
+       .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+       .nav-link:hover {
+            background-color: var(--light-blue);
+            color: var(--primary-blue);
+        }
+       .nav-link.active {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+        /* 首屏美化 */
+       .hero-section {
+            background: linear-gradient(135deg, #F8F9FA 0%, #E3F2FD 100%);
+            padding: 6rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+       .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(26, 115, 232, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
+            z-index: 0;
+        }
+       .hero-section.container {
+            position: relative;
+            z-index: 1;
+        }
+       .hero-section h1 {
+            font-family: 仿宋;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+       .hero-section.lead {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: #4a5568;
+        }
+       .btn-primary {
+            background-color: var(--medical-blue);
+            border-color: var(--medical-blue);
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+       .btn-primary:hover {
+            background-color: #0b5ed7;
+            border-color: #0a58ca;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+       .btn-outline-secondary {
+            border-radius: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+       .btn-outline-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+       .medical-illustration {
+
+            height: 400px;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+            width: 600px;
+            max-width: 100%;
+            margin: 0 auto;
+       }
+       .medical-illustration::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(26, 115, 232, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+            border-radius: 1rem;
+        }
+       .medical-illustration:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+        /* 核心功能美化 */
+        #features {
+            padding: 5rem 0;
+            background-color: #f8f9fa;
+        }
+        #features h2 {
+            font-weight: 700;
+            margin-bottom: 3rem;
+            position: relative;
+            display: inline-block;
+        }
+        #features h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--medical-blue);
+            border-radius: 2px;
+        }
+
+       .ai-feature-card img {
+            margin-bottom: 1.5rem;
+            height: 60px;
+            width: auto;
+            transition: transform 0.3s ease;
+        }
+       .ai-feature-card:hover img {
+            transform: scale(1.1);
+        }
+       .ai-feature-card h4 {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--medical-blue);
+        }
+       .ai-feature-card p {
+            color: #6c757d;
+        }
+        /* 技术优势美化 */
+        #technology {
+            padding: 5rem 0;
+            background-color: white;
+        }
+        #technology h3 {
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--medical-blue);
+        }
+        #technology ul {
+            padding-left: 0;
+        }
+        #technology li {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 1rem;
+            list-style: none;
+            font-size: 1.1rem;
+        }
+        #technology li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--medical-green);
+            font-weight: bold;
+        }
+        #technology img {
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+        #technology img:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+        /* 页脚美化 */
+        footer {
+            background: linear-gradient(135deg, #1A3E8C 0%, #1A73E8 100%);
+            color: white;
+            padding: 3rem 0;
+        }
+        footer h5 {
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: inline-block;
+        }
+        footer h5::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+        }
+        footer p {
+            opacity: 0.9;
+        }
+        footer img {
+            filter: brightness(0) invert(1);
+            transition: all 0.3s ease;
+        }
+        footer img:hover {
+            transform: translateY(-3px);
+        }
+        /* 响应式调整 */
+        @media (max-width: 992px) {
+           .hero-section {
+                padding: 4rem 0;
+                text-align: center;
+            }
+           .hero-section.d-flex {
+                justify-content: center;
+            }
+           .medical-illustration {
+                margin-top: 3rem;
+                height: 300px;
+                width: 400px;
+            }
+        }
+        @media (max-width: 768px) {
+           .hero-section h1 {
+                font-size: 2.5rem;
+            }
+           .hero-section.lead {
+                font-size: 1.1rem;
+            }
+            #features, #technology {
+                padding: 3rem 0;
+            }
+        }
+        /* 动画效果 */
+       .animate__animated {
+            --animate-duration: 1s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* 浮动动画 */
+       .float {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+    <!-- 引入Bootstrap -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="{{ url_for('static', filename='avatars/default.png') }}" alt="智瞳" height="30" width="auto">
+                智瞳
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="/go_to_indexFB">息肉智能检测</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/go_to_AIpage">虚拟医生</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#cases">关于我们</a></li>
+<!--                    <li class="nav-item"><a class="btn btn-primary ms-2" href="#try">登录/注册</a></li>-->
+                </ul>
+            </div>
+        </div>
+
+    </nav>
+    </body>
+    <!-- 首屏展示 -->
+    <section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 animate__animated animate__fadeInLeft">
+                <h1 class="display-4 fw-bold mb-4">结肠息肉智能识别系统</h1>
+                <p class="lead mb-4">基于深度学习技术，实现内镜影像实时分析，识别准确率达98.7%</p>
+                <div class="d-flex gap-3">
+                    <a href="#demo" class="btn btn-primary btn-lg px-5 animate__animated animate__pulse animate__infinite animate__slower">观看演示</a>
+                    <a href="#contact" class="btn btn-outline-secondary btn-lg px-5">医疗合作</a>
+                </div>
+            </div>
+            <div class="col-lg-6 medical-illustration float animate__animated animate__fadeInRight" style="background-image: url('{{ url_for('static', filename='j-bg/海报.png') }}'); background-size: cover; background-position: center;"></div>
+        </div>
+    </div>
+</section>
+    <!-- 核心功能 - 简洁美化版 -->
+    <section id="features" class="py-5">
+        <div class="container">
+            <div class="section-header text-center mb-5 animate__animated animate__fadeIn">
+                <h2 class="gradient-title">核心功能</h2>
+                <div class="title-divider"></div>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card glass-card animate__animated animate__fadeInUp" data-wow-delay="0.1s">
+                        <div class="icon-wrapper bg-primary-light">
+                            <i class="bi bi-speedometer2"></i>
+                        </div>
+                        <h4>实时病灶标记</h4>
+                        <p>内镜影像实时分析，0.2秒内完成息肉定位标注</p>
+                        <div class="hover-effect"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card glass-card animate__animated animate__fadeInUp" data-wow-delay="0.2s">
+                        <div class="icon-wrapper bg-success-light">
+                            <i class="bi bi-file-earmark-medical"></i>
+                        </div>
+                        <h4>智能报告生成</h4>
+                        <p>自动生成结构化报告，支持NBI分型与病理预测</p>
+                        <div class="hover-effect"></div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card glass-card animate__animated animate__fadeInUp" data-wow-delay="0.3s">
+                        <div class="icon-wrapper bg-info-light">
+                            <i class="bi bi-database"></i>
+                        </div>
+                        <h4>影像数据管理</h4>
+                        <p>符合DICOM标准，支持多中心数据协作分析</p>
+                        <div class="hover-effect"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <style>
+        /* 核心功能样式 */
+        #features {
+            backdrop-filter: blur(5px);
+        }
+       .title-divider {
+            width: 80px;
+            height: 3px;
+            margin: 1rem auto;
+            border-radius: 3px;
+        }
+       .feature-card {
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+       .icon-wrapper {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        font-size: 2rem;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .bg-primary-light {
+        background: linear-gradient(135deg, #1A73E8, #4285F4);
+    }
+
+    .bg-success-light {
+        background: linear-gradient(135deg, #34A853, #0F9D58);
+    }
+
+    .bg-info-light {
+        background: linear-gradient(135deg, #4285F4, #669DF6);
+    }
+
+    .feature-card h4 {
+        margin-bottom: 1rem;
+        color: var(--text-dark);
+    }
+
+    .feature-card p {
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+
+    .hover-effect {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, #1A73E8, #34A853);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .feature-card:hover .hover-effect {
+        transform: scaleX(1);
+    }
+
+    .feature-card:hover .icon-wrapper {
+        transform: scale(1.1);
+    }
+
+    @media (max-width: 768px) {
+        .feature-card {
+            padding: 1.5rem;
+        }
+
+        .icon-wrapper {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<!-- 技术优势 -->
+<section id="technology" class="py-5">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6 animate__animated animate__fadeInLeft">
+                <h3 class="mb-4">基于ResNet-3D的深度网络架构</h3>
+                <ul class="list-unstyled">
+                    <li class="mb-3">多帧时序特征分析，捕捉动态变化特征</li>
+                    <li class="mb-3">自适应光照增强算法，提升低质量影像识别率</li>
+                    <li class="mb-3">临床验证敏感度99.2%，特异度97.8%</li>
+                    <li class="mb-3">支持5种常见息肉类型分类</li>
+                    <li class="mb-3">符合医疗AI软件认证标准</li>
+                </ul>
+            </div>
+            <div class="col-lg-6 animate__animated animate__fadeInRight">
+                <img src="{{ url_for('static', filename='j-bg/img.png') }}" alt="网络架构" class="img-fluid rounded-3 shadow">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 临床案例 -->
+<section id="cases" class="py-5">
+    <section class="container">
+        <div class="section-header text-center mb-5 animate__animated animate__fadeIn">
+            <h2>数据支持</h2>
+            <p class="lead text-muted">来自全国顶尖医疗机构的真实数据验证</p>
+        </div>
+ </section>
+        <!-- 案例卡片组 -->
+
+
+      <div class="row mt-5">
+    <div class="col-lg-6 animate__animated animate__fadeInLeft">
+        <div class="glass-card p-3 h-100">
+            <h5 class="text-center mb-3 small-header">AI辅助前后检出率对比</h5>
+            <div class="chart-container" style="height: 250px; padding: 15px;">
+                <canvas id="detectionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 animate__animated animate__fadeInRight">
+        <div class="glass-card p-3 h-100">
+            <h5 class="text-center mb-3 small-header">智能识别技术区域分布</h5>
+            <div class="chart-container" style="height: 250px; padding: 15px; position: relative;">
+                <canvas id="hospitalChart" style="margin: 0 auto;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <!-- 合作伙伴 -->
+
+        </div>
+    </div>
+</section>
+
+<style>
+    /* 临床案例模块样式 */
+    #cases {
+        background: linear-gradient(
+            135deg,
+            rgba(248, 249, 250, 0.8),
+            rgba(227, 242, 253, 0.8)
+        );
+        backdrop-filter: blur(5px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    #cases::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(
+            circle,
+            rgba(26, 115, 232, 0.1) 0%,
+            rgba(255, 255, 255, 0) 70%
+        );
+        z-index: -1;
+    }
+
+    .section-header h2 {
+        position: relative;
+        display: inline-block;
+        padding-bottom: 15px;
+    }
+
+    .section-header h2::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 3px;
+        background: var(--primary-blue);
+        border-radius: 3px;
+    }
+
+
+    .partner-logos img {
+        height: 60px;
+        width: auto;
+        opacity: 0.8;
+        transition: all 0.3s ease;
+    }
+
+    .partner-logos img:hover {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+
+    .chart-container {
+        position: relative;
+        height: 100%;
+        min-height: 250px;
+    }
+
+</style>
+
+<!-- 引入Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // 初始化检出率对比图表
+    const detectionCtx = document.getElementById('detectionChart').getContext('2d');
+    const detectionChart = new Chart(detectionCtx, {
+        type: 'bar',
+        data: {
+            labels: ['<5mm息肉', '5-10mm息肉', '>10mm息肉', '平坦型病变'],
+            datasets: [
+                {
+                    label: '传统方法',
+                    data: [65, 78, 92, 70],
+                    backgroundColor: 'rgba(108, 117, 125, 0.7)',
+                    borderColor: 'rgba(108, 117, 125, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'AI辅助',
+                    data: [92, 95, 98, 89],
+                    backgroundColor: 'rgba(13, 110, 253, 0.7)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: '检出率(%)'
+                    }
+                }
+            }
+        }
+    });
+
+    // 初始化医院分布图表
+    const hospitalCtx = document.getElementById('hospitalChart').getContext('2d');
+    const hospitalChart = new Chart(hospitalCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['华北地区', '华东地区', '华南地区', '华中地区', '西部地区'],
+            datasets: [{
+                data: [28, 32, 18, 12, 10],
+                backgroundColor: [
+                    'rgba(13, 110, 253, 0.7)',
+                    'rgba(25, 135, 84, 0.7)',
+                    'rgba(255, 193, 7, 0.7)',
+                    'rgba(220, 53, 69, 0.7)',
+                    'rgba(108, 117, 125, 0.7)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                }
+            }
+        }
+    });
+</script>
+<!-- 结肠息肉科普 -->
+<section id="knowledge" class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5 animate__animated animate__fadeIn">结肠健康知识中心</h2>
+    </div>
+    </section>
+        <!-- 疾病概述卡片 - 优化版 -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="disease-overview-card glass-card animate__animated animate__fadeIn hover-3d">
+            <div class="row g-4 align-items-center">
+                <!-- 图片区域 -->
+                <div class="col-lg-4 col-md-5">
+                    <div class="medical-image-wrapper">
+                        <img src="{{ url_for('static', filename='j-bg/息肉.png') }}" alt="结肠息肉示意图" class="img-fluid rounded-4">
+                        <div class="image-caption">
+                            <i class="bi bi-info-circle"></i> 结肠息肉内镜图像示例
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 内容区域 -->
+                <div class="col-lg-8 col-md-7">
+                    <div class="disease-content">
+                        <div class="d-flex align-items-center mb-3">
+                            <h2 class="mb-0 disease-title">
+                                <i class="bi bi-clipboard2-pulse text-primary me-2"></i>
+                                结肠息肉健康知识
+                            </h2>
+                            <span class="badge bg-primary ms-3">医学百科</span>
+                        </div>
+
+                        <div class="disease-description">
+                            <p class="lead">
+                                结肠息肉是结肠黏膜表面向肠腔突出的隆起性病变，作为结直肠癌的主要癌前病变，其早期发现和治疗至关重要。
+                            </p>
+
+                            <div class="key-facts">
+                                <div class="fact-item">
+                                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                    <strong>癌变风险：</strong>腺瘤性息肉癌变率高达30%
+                                </div>
+                                <div class="fact-item">
+                                    <i class="bi bi-clock-history text-danger"></i>
+                                    <strong>发展周期：</strong>通常需要5-10年发展为癌症
+                                </div>
+                                <div class="fact-item">
+                                    <i class="bi bi-heart-pulse text-success"></i>
+                                    <strong>早期治愈率：</strong>早期发现治愈率>90%
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center mt-3">
+                            <div class="progress w-100 me-3" style="height: 6px;">
+                                <div class="progress-bar bg-primary" style="width: 85%"></div>
+                            </div>
+                            <small class="text-muted nowrap">85%患者无症状</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 疾病概述卡片样式 */
+    .disease-overview-card {
+        border-radius: 16px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .medical-image-wrapper {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .medical-image-wrapper img {
+        transition: transform 0.5s ease;
+    }
+
+    .disease-overview-card:hover .medical-image-wrapper img {
+        transform: scale(1.03);
+    }
+
+    .image-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .disease-title {
+        font-family: 'Microsoft YaHei', sans-serif;
+        font-weight: 700;
+        font-size: 1.8rem;
+        color: var(--text-dark);
+        position: relative;
+    }
+
+    .disease-title::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: var(--primary-blue);
+    }
+
+    .disease-description .lead {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #4a5568;
+    }
+
+    .key-facts {
+        margin: 1.5rem 0;
+    }
+
+    .fact-item {
+        padding: 0.8rem 0;
+        border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+        font-size: 1rem;
+    }
+
+    .fact-item:last-child {
+        border-bottom: none;
+    }
+
+    .fact-item i {
+        margin-right: 0.8rem;
+        font-size: 1.2rem;
+        vertical-align: middle;
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 992px) {
+        .disease-title {
+            font-size: 1.6rem;
+        }
+
+        .disease-description .lead {
+            font-size: 1rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .disease-overview-card {
+            padding: 1.5rem;
+        }
+
+        .disease-title {
+            font-size: 1.4rem;
+        }
+
+        .medical-image-wrapper {
+            margin-bottom: 1.5rem;
+        }
+    }
+</style>
+
+        <!-- 知识卡片组 -->
+        <div class="row g-4">
+            <!-- 基础认知 -->
+            <div class="col-lg-6">
+                <div class="medical-card glass-card animate__animated animate__fadeInLeft hover-3d">
+                    <div class="card-header d-flex align-items-center">
+                        <div class="card-icon">
+                            <i class="bi bi-question-circle display-4 text-primary"></i>
+                        </div>
+                        <h3 class="ms-3 mb-0">什么是结肠息肉？</h3>
+                    </div>
+                    <div class="card-body">
+                        <ul class="knowledge-list">
+                            <li>
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                <strong>肠黏膜隆起病变：</strong>肠黏膜表面突向肠腔的异常增生
+                            </li>
+                            <li>
+                                <i class="bi bi-info-circle-fill text-info me-2"></i>
+                                <strong>常见类型：</strong>
+                                <span class="badge bg-primary">腺瘤性</span>
+                                <span class="badge bg-secondary">炎性</span>
+                                <span class="badge bg-success">增生性</span>
+                            </li>
+                            <li>
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                <strong>癌变风险：</strong>直径＞1cm的腺瘤癌变率高达30%
+                            </li>
+                            <li>
+                                <i class="bi bi-clock-history text-danger me-2"></i>
+                                <strong>发展过程：</strong>（一般情况）<br>腺瘤→不典型增生→癌变(通常5-10年)
+                            </li>
+                        </ul>
+                        <div class="mt-3">
+                            <img src="{{ url_for('static', filename='j-bg/息肉发展.png') }}" alt="息肉发展" class="img-fluid rounded-3">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 危险因素 -->
+            <div class="col-lg-6">
+                <div class="medical-card glass-card animate__animated animate__fadeInRight hover-3d">
+                    <div class="card-header d-flex align-items-center">
+                        <div class="card-icon">
+                            <i class="bi bi-exclamation-triangle display-4 text-danger"></i>
+                        </div>
+                        <h3 class="ms-3 mb-0">高危人群特征</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="risk-factors">
+                            <div class="factor-item mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge bg-danger fs-6">年龄≥40岁</span>
+                                    <span class="text-danger fw-bold">65%发病率</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-danger progress-bar-striped" style="width: 65%"></div>
+                                </div>
+                            </div>
+
+                            <div class="factor-item mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge bg-warning fs-6">家族病史</span>
+                                    <span class="text-warning fw-bold">风险提升3倍</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-warning progress-bar-striped" style="width: 45%"></div>
+                                </div>
+                            </div>
+
+                            <div class="factor-item mb-4">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge bg-info fs-6">炎症性肠病</span>
+                                    <span class="text-info fw-bold">风险提升5倍</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-info progress-bar-striped" style="width: 35%"></div>
+                                </div>
+                            </div>
+
+                            <div class="factor-item">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="badge bg-success fs-6">不良生活习惯</span>
+                                    <span class="text-success fw-bold">风险提升2倍</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-success progress-bar-striped" style="width: 55%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <p class="small text-muted">* 数据来源于2023年中国结直肠癌筛查指南</p>
+                             <img src="{{ url_for('static', filename='j-bg/数据来源.png') }}" alt="网络架构" class="img-fluid rounded-3 shadow">
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 症状提示 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="medical-card glass-card animate__animated animate__fadeInUp hover-3d">
+                    <div class="card-header d-flex align-items-center">
+                        <div class="card-icon">
+                            <i class="bi bi-clipboard-pulse display-4 text-primary"></i>
+                        </div>
+                        <h4 class="ms-3 mb-0">常见症状</h4>
+                    </div>
+                    <div class="card-body">
+                        <ul class="symptom-list">
+                            <li class="d-flex align-items-start mb-3">
+                                <i class="bi bi-droplet-fill text-danger me-2 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">便血或潜血阳性</h6>
+                                    <p class="small text-muted mb-0">最常见的早期症状，常被误认为痔疮</p>
+                                </div>
+                            </li>
+                            <li class="d-flex align-items-start mb-3">
+                                <i class="bi bi-arrow-left-right text-primary me-2 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">排便习惯改变</h6>
+                                    <p class="small text-muted mb-0">腹泻便秘交替，里急后重感</p>
+                                </div>
+                            </li>
+                            <li class="d-flex align-items-start mb-3">
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-2 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">不明原因腹痛</h6>
+                                    <p class="small text-muted mb-0">左下腹隐痛或不适</p>
+                                </div>
+                            </li>
+                            <li class="d-flex align-items-start">
+                                <i class="bi bi-heart-pulse-fill text-danger me-2 mt-1"></i>
+                                <div>
+                                    <h6 class="mb-1">缺铁性贫血</h6>
+                                    <p class="small text-muted mb-0">长期慢性失血导致</p>
+                                </div>
+                            </li>
+                        </ul>
+                        <div class="alert alert-warning mt-3 p-2 small">
+                            <i class="bi bi-info-circle me-2"></i> 注意：早期息肉通常无症状，定期筛查是关键
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 检测指南 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="medical-card glass-card animate__animated animate__fadeInUp hover-3d">
+                    <div class="card-header d-flex align-items-center">
+                        <div class="card-icon">
+                            <i class="bi bi-binoculars display-4 text-primary"></i>
+                        </div>
+                        <h4 class="ms-3 mb-0">筛查建议</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item mb-4">
+                                <div class="d-flex">
+                                    <div class="timeline-mark bg-success me-3"></div>
+                                    <div>
+                                        <h5>普通人群</h5>
+                                        <p class="mb-2">40岁起每5年肠镜检查</p>
+                                        <span class="badge bg-light text-dark small">推荐等级: A</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="timeline-item mb-4">
+                                <div class="d-flex">
+                                    <div class="timeline-mark bg-warning me-3"></div>
+                                    <div>
+                                        <h5>高危人群</h5>
+                                        <p class="mb-2">30岁起每年粪便DNA检测</p>
+                                        <span class="badge bg-light text-dark small">推荐等级: B</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="d-flex">
+                                    <div class="timeline-mark bg-danger me-3"></div>
+                                    <div>
+                                        <h5>家族性腺瘤性息肉病</h5>
+                                        <p class="mb-2">青春期起每年肠镜检查</p>
+                                        <span class="badge bg-light text-dark small">推荐等级: A+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-outline-primary w-100">
+                                <i class="bi bi-calendar-check me-2"></i>预约筛查测试
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 预防措施 -->
+            <div class="col-md-12 col-lg-4">
+                <div class="medical-card glass-card animate__animated animate__fadeInUp hover-3d">
+                    <div class="card-header d-flex align-items-center">
+                        <div class="card-icon">
+                            <i class="bi bi-shield-check display-4 text-success"></i>
+                        </div>
+                        <h4 class="ms-3 mb-0">预防建议</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="prevention-tips">
+                            <div class="tip-item bg-success mb-3 p-3 rounded-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-activity fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1">增加膳食纤维</h6>
+                                        <p class="small mb-0">每日25-30克，降低风险40%</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tip-item bg-info mb-3 p-3 rounded-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-slash-circle fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1">限制红肉摄入</h6>
+                                        <p class="small mb-0">每周不超过500克</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tip-item bg-warning mb-3 p-3 rounded-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-x-circle fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1">戒烟限酒</h6>
+                                        <p class="small mb-0">降低风险35%</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tip-item bg-primary p-3 rounded-3">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-bicycle fs-4 me-3"></i>
+                                    <div>
+                                        <h6 class="mb-1">规律运动</h6>
+                                        <p class="small mb-0">每周150分钟中等强度</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 专家提示 - 优化版 -->
+<div class="expert-alert mt-5 animate__animated animate__fadeIn">
+    <div class="glass-card p-4" style="background: linear-gradient(135deg, #e6f2ff, #f0f8ff); border: 1px solid rgba(173, 216, 230, 0.5);">
+        <div class="d-flex flex-column flex-md-row align-items-center">
+            <!-- 图标部分 -->
+            <div class="col-md-2 text-center mb-3 mb-md-0">
+                <div class="icon-circle bg-white p-3 d-inline-flex align-items-center justify-content-center">
+                    <i class="bi bi-lightbulb text-primary" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+
+            <!-- 内容部分 -->
+            <div class="col-md-8 text-center text-md-start px-3">
+                <h4 class="mb-2 text-primary">医学专家建议</h4>
+                <p class="mb-0 text-muted" style="line-height: 1.6;">
+                    早期发现的结肠息肉5年生存率可达90%以上。AI辅助诊断技术可提高小息肉检出率30%，建议40岁以上人群每3-5年进行一次肠镜检查。
+                </p>
+            </div>
+
+            <!-- 按钮部分 -->
+            <div class="col-md-2 text-center mt-3 mt-md-0">
+                <button class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="bi bi-chat-square-text me-1"></i>咨询专家
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 专家提示样式 */
+    .expert-alert {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .glass-card {
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .glass-card:hover {
+        box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .icon-circle {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    @media (max-width: 768px) {
+        .glass-card {
+            padding: 1.5rem !important;
+        }
+
+        .icon-circle {
+            width: 50px;
+            height: 50px;
+        }
+    }
+</style>
+
+
+<style>
+    /* 新增科普模块样式 */
+    #knowledge {
+
+
+        backdrop-filter: blur(5px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    #knowledge::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+
+        z-index: -1;
+    }
+
+    .medical-card {
+        border: none;
+        border-radius: 15px;
+        height: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .medical-card .card-header {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 1.5rem 1.5rem 1rem;
+        background: transparent;
+    }
+
+    .medical-card .card-body {
+        padding: 1.5rem;
+    }
+
+    .knowledge-list li {
+        position: relative;
+        padding-left: 0;
+        margin-bottom: 1rem;
+        list-style: none;
+    }
+
+    .symptom-list {
+        padding-left: 0;
+        list-style: none;
+    }
+
+    .prevention-tips .tip-item {
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .prevention-tips .tip-item:hover {
+        transform: translateX(5px);
+    }
+
+    .timeline-mark {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 5px;
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 768px) {
+        .medical-card .card-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .card-icon {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+
+<style>
+/* 知识科普样式 */
+.medical-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    height: 100%;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+}
+
+.medical-card:hover {
+    transform: translateY(-5px);
+}
+
+.card-icon {
+    margin-bottom: 1.5rem;
+    opacity: 0.8;
+}
+
+.knowledge-list li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.8rem;
+}
+
+.knowledge-list li::before {
+    content: "•";
+    color: var(--medical-blue);
+    position: absolute;
+    left: 0;
+    font-weight: bold;
+}
+
+.risk-factors .progress {
+    height: 8px;
+    border-radius: 4px;
+}
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.timeline-mark {
+    position: absolute;
+    left: -38px;
+    top: 5px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.prevention-tips {
+    display: grid;
+    gap: 1rem;
+}
+
+.tip-item {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    color: white;
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.tip-item:hover {
+    transform: scale(1.05);
+}
+
+.expert-alert .alert {
+    border-radius: 1rem;
+    border: none;
+}
+
+@media (max-width: 768px) {
+    .medical-card {
+        margin-bottom: 1.5rem;
+    }
+
+    .expert-alert .d-flex {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .expert-alert i {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<!-- 页脚 -->
+<footer class="bg-dark text-light py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-4 mb-md-0">
+                <h5>医疗认证</h5>
+                <div class="d-flex align-items-center mt-3">
+
+                </div>
+            </div>
+            <div class="col-md-4 mb-4 mb-md-0">
+                <h5>联系我们</h5>
+
+            </div>
+            <div class="col-md-4">
+                <h5>合作机构</h5>
+                <div class="d-flex flex-wrap gap-3 mt-3">
+                </div>
+            </div>
+        </div>
+        <hr class="my-4">
+        <div class="text-center">
+            <p class="mb-0">© 2025 智瞳 - 结肠息肉智能识别系统. 保留所有权利.</p>
+        </div>
+    </div>
+
+</footer>
+
+<!-- 脚本 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+<script>
+    // 滚动动画效果
+    document.addEventListener('DOMContentLoaded', function() {
+        const animateElements = document.querySelectorAll('.animate__animated');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add(entry.target.dataset.animate || 'animate__fadeIn');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.1
+        });
+
+        animateElements.forEach(el => {
+            observer.observe(el);
+        });
+
+        // 导航栏滚动效果
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow');
+                nav.style.padding = '0.5rem 0';
+            } else {
+                nav.classList.remove('shadow');
+                nav.style.padding = '1rem 0';
+            }
+        });
+    });
+</script>
+</body>
+</html>

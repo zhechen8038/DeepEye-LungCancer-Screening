@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智瞳 AI - 数据分析与可视化</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        accent: '#7E22CE',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#06B6D4',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .text-gradient {
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+    <!-- 导航栏 -->
+    <nav id="mainNav" class="fixed w-full bg-white/90 backdrop-blur-md z-50 transition-all duration-300 shadow-sm">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/go_to_index" class="flex items-center">
+                        <img src="{{ url_for('static', filename='img/zhitong_logo.jpg') }}" alt="智瞳AI" class="h-8 mr-2">
+                        <span class="text-xl font-bold text-primary">智瞳 AI</span>
+                    </a>
+                    <div class="hidden sm:ml-10 sm:flex space-x-8">
+                        <a href="{{ url_for('index') }}#features" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">功能</a>
+                        <a href="{{ url_for('index') }}#how-it-works" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">使用流程</a>
+                        <a href="{{ url_for('index') }}#testimonials" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">用户评价</a>
+                        <a href="{{ url_for('index') }}#faq" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">常见问题</a>
+                        <a href="/go_to_visualization" class="text-primary border-b-2 border-primary px-3 py-2 text-sm font-medium">数据分析</a>
+                        <a href="/go_to_AIpage" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">AI医生小助手</a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <a href="/go_to_upload" class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-colors mr-4">
+                        <i class="fa fa-upload mr-2"></i>上传影像
+                    </a>
+                    <a href="/go_to_Login" class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary bg-white hover:bg-gray-50 transition-colors">
+                        <i class="fa fa-user-circle mr-2"></i>登录
+                    </a>
+                    <button type="button" class="sm:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary hover:bg-gray-100 focus:outline-none" id="mobileMenuButton">
+                        <i class="fa fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 移动端菜单 -->
+        <div class="sm:hidden hidden" id="mobileMenu">
+            <div class="px-2 pt-2 pb-3 space-y-1 bg-white shadow-lg">
+                <a href="{{ url_for('index') }}#features" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">功能</a>
+                <a href="{{ url_for('index') }}#how-it-works" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">使用流程</a>
+                <a href="{{ url_for('index') }}#testimonials" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">用户评价</a>
+                <a href="{{ url_for('index') }}#faq" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">常见问题</a>
+                <a href="/go_to_visualization" class="block px-3 py-2 text-base font-medium text-white bg-primary rounded-md">数据分析</a>
+                <a href="/go_to_upload" class="block px-3 py-2 text-base font-medium text-white bg-primary rounded-md mt-4 text-center">
+                    <i class="fa fa-upload mr-2"></i>上传影像
+                </a>
+                <a href="/go_to_Login" class="block px-3 py-2 text-base font-medium text-primary border border-primary rounded-md text-center">
+                    <i class="fa fa-user-circle mr-2"></i>登录
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面头部 -->
+    <header class="pt-24 pb-16 bg-gradient-to-br from-primary/5 to-accent/5">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-tight text-dark">
+                    医疗数据分析<span class="text-gradient bg-gradient-to-r from-primary to-accent">与可视化</span>
+                </h1>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+                    基于AI分析结果的全面数据可视化，帮助医疗专业人员更好地理解和利用诊断数据
+                </p>
+                <div class="mt-8 flex flex-wrap justify-center gap-4">
+                    <a href="#overview" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                        <i class="fa fa-bar-chart mr-2"></i>查看概览
+                    </a>
+                    <a href="#detailed-analysis" class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-all">
+                        <i class="fa fa-search-plus mr-2"></i>详细分析
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 数据概览 -->
+    <section id="overview" class="py-20 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">数据<span class="text-gradient bg-gradient-to-r from-primary to-accent">概览</span></h2>
+                <p class="text-lg text-gray-600">基于AI分析结果的关键指标和趋势分析</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-l-4 border-primary">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">总分析案例</p>
+                            <h3 class="text-3xl font-bold mt-1">12,543</h3>
+                            <p class="text-sm text-green-500 mt-2">
+                                <i class="fa fa-arrow-up"></i> 12.5% 较上月
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                            <i class="fa fa-file-text-o text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-l-4 border-secondary">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">平均准确率</p>
+                            <h3 class="text-3xl font-bold mt-1">92.7%</h3>
+                            <p class="text-sm text-green-500 mt-2">
+                                <i class="fa fa-arrow-up"></i> 1.2% 较上月
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center text-secondary">
+                            <i class="fa fa-check-circle text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-l-4 border-accent">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">分析类型</p>
+                            <h3 class="text-3xl font-bold mt-1">12+</h3>
+                            <p class="text-sm text-gray-500 mt-2">
+                                包括MRI、PET-CT、内窥镜等
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center text-accent">
+                            <i class="fa fa-stethoscope text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover border-l-4 border-warning">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">平均处理时间</p>
+                            <h3 class="text-3xl font-bold mt-1">2.7分钟</h3>
+                            <p class="text-sm text-green-500 mt-2">
+                                <i class="fa fa-arrow-down"></i> 0.5分钟 较上月
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center text-warning">
+                            <i class="fa fa-clock-o text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-6">月度分析量趋势</h3>
+                    <div class="h-80">
+                        <canvas id="analysisTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-6">分析类型分布</h3>
+                    <div class="h-80">
+                        <canvas id="analysisTypeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 详细分析 -->
+    <section id="detailed-analysis" class="py-20 bg-gray-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">详细<span class="text-gradient bg-gradient-to-r from-primary to-accent">分析</span></h2>
+                <p class="text-lg text-gray-600">基于AI分析结果的深入洞察和详细数据</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h3 class="text-xl font-bold mb-6">疾病检测分布</h3>
+                <div class="h-80">
+                    <canvas id="diseaseDetectionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-6">分析准确率对比</h3>
+                    <div class="h-80">
+                        <canvas id="accuracyComparisonChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold mb-6">处理时间分布</h3>
+                    <div class="h-80">
+                        <canvas id="processingTimeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 text-center">
+                <a href="#" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                    <i class="fa fa-download mr-2"></i>下载完整报告
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white pt-16 pb-8">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <div>
+                    <div class="flex items-center mb-6">
+                        <img src="{{ url_for('static', filename='img/zhitong_logo.jpg') }}" alt="智瞳AI" class="h-8 mr-2">
+                        <span class="text-xl font-bold">智瞳 AI</span>
+                    </div>
+                    <p class="text-gray-400 mb-6">
+                        利用先进的AI技术，提供精准的医学影像分析、疾病风险评估和个性化健康方案，助力早发现、早治疗。
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-weixin text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-weibo text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-linkedin text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-youtube-play text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-6">快速链接</h4>
+                    <ul class="space-y-3">
+                        <li><a href="{{ url_for('index') }}#features" class="text-gray-400 hover:text-white transition-colors">功能介绍</a></li>
+                        <li><a href="{{ url_for('index') }}#how-it-works" class="text-gray-400 hover:text-white transition-colors">使用流程</a></li>
+                        <li><a href="/go_to_upload" class="text-gray-400 hover:text-white transition-colors">上传影像</a></li>
+                        <li><a href="/go_to_visualization" class="text-gray-400 hover:text-white transition-colors">数据分析</a></li>
+                        <li><a href="{{ url_for('index') }}#testimonials" class="text-gray-400 hover:text-white transition-colors">用户评价</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-6">服务支持</h4>
+                    <ul class="space-y-3">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">隐私政策</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">使用条款</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">服务协议</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">退款政策</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">帮助中心</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-lg font-bold mb-6">订阅更新</h4>
+                    <p class="text-gray-400 mb-4">订阅我们的通讯，获取最新的医疗AI资讯和平台更新</p>
+                    <form class="space-y-3">
+                        <div>
+                            <input type="email" placeholder="您的邮箱地址" class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+                            订阅
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 pt-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-500 text-sm">© 2025 智瞳 AI. 保留所有权利。</p>
+                    <div class="flex space-x-6 mt-4 md:mt-0">
+                        <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">隐私政策</a>
+                        <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">使用条款</a>
+                        <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Cookie政策</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // 导航栏滚动效果
+        window.addEventListener('scroll', function() {
+            const nav = document.getElementById('mainNav');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-md');
+                nav.classList.remove('shadow-sm');
+            } else {
+                nav.classList.remove('shadow-md');
+                nav.classList.add('shadow-sm');
+            }
+        });
+
+        // 移动端菜单
+        const mobileMenuButton = document.getElementById('mobileMenuButton');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - 80,
+                        behavior: 'smooth'
+                    });
+
+                    // 关闭移动端菜单
+                    if (!mobileMenu.classList.contains('hidden')) {
+                        mobileMenu.classList.add('hidden');
+                    }
+                }
+            });
+        });
+
+        // 图表初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 月度分析量趋势图
+            const trendCtx = document.getElementById('analysisTrendChart').getContext('2d');
+            const trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                    datasets: [{
+                        label: '分析案例数量',
+                        data: [850, 920, 1050, 1200, 1180, 1350, 1480, 1550, 1680, 1750, 1900, 2100],
+                        borderColor: '#165DFF',
+                        backgroundColor: 'rgba(22, 93, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 分析类型分布图
+            const typeCtx = document.getElementById('analysisTypeChart').getContext('2d');
+            const typeChart = new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['内窥镜', 'CT', 'MRI', '超声', 'PET-CT', '其他'],
+                    datasets: [{
+                        data: [45, 25, 15, 8, 5, 2],
+                        backgroundColor: [
+                            '#165DFF',
+                            '#36D399',
+                            '#7E22CE',
+                            '#F59E0B',
+                            '#06B6D4',
+                            '#9CA3AF'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // 疾病检测分布图
+            const diseaseCtx = document.getElementById('diseaseDetectionChart').getContext('2d');
+            const diseaseChart = new Chart(diseaseCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['肺炎', '肺结节', '骨折', '肿瘤', '脑出血', '脑梗', '其他'],
+                    datasets: [{
+                        label: '检测案例数量',
+                        data: [2100, 1850, 1600, 1200, 950, 800, 4033],
+                        backgroundColor: '#165DFF'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 分析准确率对比图
+            const accuracyCtx = document.getElementById('accuracyComparisonChart').getContext('2d');
+            const accuracyChart = new Chart(accuracyCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['肺炎', '肺结节', '骨折', '肿瘤', '脑出血', '脑梗'],
+                    datasets: [{
+                        label: 'AI准确率',
+                        data: [95, 92, 98, 89, 96, 91],
+                        backgroundColor: 'rgba(22, 93, 255, 0.2)',
+                        borderColor: '#165DFF',
+                        pointBackgroundColor: '#165DFF'
+                    }, {
+                        label: '人类平均准确率',
+                        data: [90, 88, 96, 85, 92, 87],
+                        backgroundColor: 'rgba(54, 211, 153, 0.2)',
+                        borderColor: '#36D399',
+                        pointBackgroundColor: '#36D399'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                stepSize: 20
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 处理时间分布图
+            const timeCtx = document.getElementById('processingTimeChart').getContext('2d');
+            const timeChart = new Chart(timeCtx, {
+                type: 'bar', // 改为条形图
+                data: {
+                    // 调整数据结构为适合条形图的格式（示例：按时间区间分组）
+                    labels: ['0-1分钟', '1-2分钟', '2-3分钟', '3-4分钟'],
+                    datasets: [{
+                        label: '案例数量',
+                        data: [3, 7, 8, 2], // 各区间的案例数
+                        backgroundColor: '#165DFF',
+                        borderColor: '#FFFFFF',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: '处理时间区间'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: '案例数量'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

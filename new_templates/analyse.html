@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智瞳 AI - 医学影像分析结果</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        accent: '#7E22CE',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#06B6D4',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+
+            .image-viewer {
+                background-color: #0a0a0a;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .image-control {
+                background-color: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(4px);
+            }
+
+            .findings-item {
+                transition: all 0.2s ease;
+            }
+
+            .findings-item:hover {
+                background-color: rgba(22, 93, 255, 0.05);
+            }
+
+            .findings-item.active {
+                background-color: rgba(22, 93, 255, 0.1);
+                border-left: 3px solid #165DFF;
+            }
+
+            .scrollbar-thin {
+                scrollbar-width: thin;
+            }
+
+            .scrollbar-thin::-webkit-scrollbar {
+                width: 4px;
+                height: 4px;
+            }
+
+            .scrollbar-thin::-webkit-scrollbar-thumb {
+                background-color: rgba(156, 163, 175, 0.5);
+                border-radius: 2px;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-100 text-gray-800 min-h-screen flex flex-col">
+<!-- 导航栏 -->
+<nav id="mainNav" class="fixed w-full bg-white/90 backdrop-blur-md z-50 transition-all duration-300 shadow-sm">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="/go_to_index" class="flex items-center">
+                    <img src="{{ url_for('static', filename='img/zhitong_logo.jpg') }}" alt="智瞳AI" class="h-8 mr-2">
+                    <span class="text-xl font-bold text-primary">智瞳 AI</span>
+                </a>
+                <div class="hidden sm:ml-10 sm:flex space-x-8">
+                    <a href="{{ url_for('index') }}#features"
+                       class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">功能</a>
+                    <a href="{{ url_for('index') }}#how-it-works"
+                       class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">使用流程</a>
+                    <a href="{{ url_for('index') }}#testimonials"
+                       class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">用户评价</a>
+                    <a href="{{ url_for('index') }}#faq"
+                       class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">常见问题</a>
+                </div>
+            </div>
+            <div class="flex items-center">
+                <a href="/go_to_upload"
+                   class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary bg-white hover:bg-gray-50 transition-colors mr-4">
+                    <i class="fa fa-upload mr-2"></i>上传新影像
+                </a>
+                <a href="/go_to_index"
+                   class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary bg-white hover:bg-gray-50 transition-colors">
+                    <i class="fa fa-home mr-2"></i>返回首页
+                </a>
+                <button type="button"
+                        class="sm:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary hover:bg-gray-100 focus:outline-none"
+                        id="mobileMenuButton">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移动端菜单 -->
+    <div class="sm:hidden hidden" id="mobileMenu">
+        <div class="px-2 pt-2 pb-3 space-y-1 bg-white shadow-lg">
+            <a href="{{ url_for('index') }}#features"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">功能</a>
+            <a href="{{ url_for('index') }}#how-it-works"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">使用流程</a>
+            <a href="{{ url_for('index') }}#testimonials"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">用户评价</a>
+            <a href="{{ url_for('index') }}#faq"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">常见问题</a>
+            <a href="/go_to_upload"
+               class="block px-3 py-2 text-base font-medium text-primary border border-primary rounded-md mt-4 text-center">
+                <i class="fa fa-upload mr-2"></i>上传新影像
+            </a>
+            <a href="/go_to_index"
+               class="block px-3 py-2 text-base font-medium text-primary border border-primary rounded-md text-center">
+                <i class="fa fa-home mr-2"></i>返回首页
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- 主要内容区域 -->
+<main class="flex-grow pt-20 pb-10">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- 页面标题 -->
+        <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-900">医学影像分析报告</h1>
+                <p class="mt-1 text-gray-600">检查日期: <span id="analysisDate"></span></p>
+            </div>
+            <div class="mt-4 md:mt-0 flex space-x-3">
+                <button id="printReport"
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+                    <i class="fa fa-print mr-2"></i>打印报告
+                </button>
+                <button id="downloadReport"
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+                    <i class="fa fa-download mr-2"></i>下载报告
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- 左侧：影像展示区域 -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- 主要影像展示 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
+                        <h2 class="font-medium text-gray-900">影像视图</h2>
+                        <div class="flex space-x-2">
+                            <button class="p-1.5 rounded hover:bg-gray-200 transition-colors" title="放大">
+                                <i class="fa fa-search-plus text-gray-600"></i>
+                            </button>
+                            <button class="p-1.5 rounded hover:bg-gray-200 transition-colors" title="缩小">
+                                <i class="fa fa-search-minus text-gray-600"></i>
+                            </button>
+                            <button class="p-1.5 rounded hover:bg-gray-200 transition-colors" title="重置">
+                                <i class="fa fa-refresh text-gray-600"></i>
+                            </button>
+                            <button class="p-1.5 rounded hover:bg-gray-200 transition-colors" title="全屏">
+                                <i class="fa fa-expand text-gray-600"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="image-viewer aspect-[4/3] w-full">
+                        <img id="mainImage" src="" alt="医学影像" class="w-full h-full object-contain">
+
+                        <!-- 影像标记点示例 -->
+                        <div id="imageMarkers" class="absolute top-0 left-0 w-full h-full pointer-events-none">
+                            <!-- 标记点将通过JS动态添加 -->
+                        </div>
+                    </div>
+                    <div class="image-control px-4 py-2 flex justify-between items-center">
+                        <div class="flex space-x-3">
+                            <button class="text-white text-sm hover:text-primary transition-colors">
+                                <i class="fa fa-arrow-left mr-1"></i> 上一张
+                            </button>
+                            <button class="text-white text-sm hover:text-primary transition-colors">
+                                <i class="fa fa-arrow-right mr-1"></i> 下一张
+                            </button>
+                        </div>
+                        <div class="text-white text-sm">
+                            <span id="imageCount">1 / 3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 辅助影像视图 -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="p-3 bg-gray-50 border-b text-sm font-medium text-gray-900">矢状面</div>
+                        <div class="image-viewer aspect-[3/4] w-full">
+                            <img id="sagittalImage" src="" alt="矢状面影像" class="w-full h-full object-contain">
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="p-3 bg-gray-50 border-b text-sm font-medium text-gray-900">冠状面</div>
+                        <div class="image-viewer aspect-[3/4] w-full">
+                            <img id="coronalImage" src="" alt="冠状面影像" class="w-full h-full object-contain">
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="p-3 bg-gray-50 border-b text-sm font-medium text-gray-900">横断面</div>
+                        <div class="image-viewer aspect-[3/4] w-full">
+                            <img id="axialImage" src="" alt="横断面影像" class="w-full h-full object-contain">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分析数据图表 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b">
+                        <h2 class="font-medium text-gray-900">影像密度分析</h2>
+                    </div>
+                    <div class="p-4">
+                        <canvas id="densityChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：分析结果区域 -->
+            <div class="space-y-6">
+                <!-- 患者信息 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b">
+                        <h2 class="font-medium text-gray-900">患者信息</h2>
+                    </div>
+                    <div class="p-4">
+                        <table class="w-full">
+                            <tbody>
+                            <tr class="border-b border-gray-100">
+                                <td class="py-2 text-gray-500">影像类型</td>
+                                <td class="py-2 font-medium" id="patientImageType">-</td>
+                            </tr>
+                            <tr class="border-b border-gray-100">
+                                <td class="py-2 text-gray-500">患者信息</td>
+                                <td class="py-2 font-medium" id="patientInfo">-</td>
+                            </tr>
+                            <tr class="border-b border-gray-100">
+                                <td class="py-2 text-gray-500">分析时间</td>
+                                <td class="py-2 font-medium" id="analysisTime">-</td>
+                            </tr>
+                            <tr>
+                                <td class="py-2 text-gray-500">AI模型版本</td>
+                                <td class="py-2 font-medium">V2.3.1</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 检测结果摘要 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b">
+                        <h2 class="font-medium text-gray-900">检测结果摘要</h2>
+                    </div>
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-gray-600">风险等级</span>
+                            <span id="riskLevel" class="px-3 py-1 rounded-full text-sm font-medium">-</span>
+                        </div>
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-gray-600">主要发现</span>
+                            <span id="mainFinding" class="text-sm font-medium">-</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">建议</span>
+                            <span id="mainRecommendation" class="text-sm font-medium">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 检测发现列表 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b">
+                        <h2 class="font-medium text-gray-900">详细发现</h2>
+                    </div>
+                    <div class="max-h-96 overflow-y-auto scrollbar-thin" id="findingsList">
+                        <!-- 发现项将通过JS动态添加 -->
+                    </div>
+                </div>
+
+                <!-- 影像分析详情 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b">
+                        <h2 class="font-medium text-gray-900">影像分析详情</h2>
+                    </div>
+                    <div class="p-4">
+                        <div class="space-y-3 text-sm text-gray-700" id="detailedAnalysis">
+                            <p>加载分析详情中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 建议 -->
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="p-4 bg-gray-50 border-b">
+                        <h2 class="font-medium text-gray-900">临床建议</h2>
+                    </div>
+                    <div class="p-4">
+                        <div class="space-y-3 text-sm text-gray-700" id="clinicalRecommendations">
+                            <p>加载临床建议中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-dark text-white pt-10 pb-6">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="border-t border-gray-800 pt-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm">© 2025 智瞳 AI. 保留所有权利。</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">隐私政策</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">使用条款</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">免责声明</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script>
+    // 导航栏滚动效果
+    window.addEventListener('scroll', function () {
+        const nav = document.getElementById('mainNav');
+        if (window.scrollY > 50) {
+            nav.classList.add('shadow-md');
+            nav.classList.remove('shadow-sm');
+        } else {
+            nav.classList.remove('shadow-md');
+            nav.classList.add('shadow-sm');
+        }
+    });
+
+    // 移动端菜单
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    mobileMenuButton.addEventListener('click', function () {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    // 从localStorage获取分析结果
+    document.addEventListener('DOMContentLoaded', function () {
+        const analysisResult = JSON.parse(localStorage.getItem('analysisResult'));
+
+        // 如果没有分析结果，重定向到上传页面
+        if (!analysisResult) {
+            window.location.href = 'upload.html';
+            return;
+        }
+
+        // 填充页面数据
+        populateAnalysisData(analysisResult);
+
+        // 清除localStorage中的结果（可选）
+        // localStorage.removeItem('analysisResult');
+    });
+
+    // 填充分析数据到页面
+    function populateAnalysisData(data) {
+        // 设置日期和时间
+        const now = new Date();
+        document.getElementById('analysisDate').textContent = now.toLocaleDateString();
+        document.getElementById('analysisTime').textContent = now.toLocaleTimeString();
+
+        // 设置患者信息
+        const imageTypeMap = {
+            'ultrasound': '超声影像',
+            'pet-ct': 'PET-CT',
+            'endoscopy': '内窥镜影像'
+        };
+
+        document.getElementById('patientImageType').textContent = imageTypeMap[data.imageType] || data.imageType;
+        document.getElementById('patientInfo').textContent = data.patientInfo || '未提供';
+
+        // 设置影像
+        document.getElementById('mainImage').src = data.result;
+        document.getElementById('sagittalImage').src = data.result; // 实际应用中应该是不同的切面图
+        document.getElementById('coronalImage').src = data.result;
+        document.getElementById('axialImage').src = data.result;
+
+        // 设置风险等级和主要发现
+        let riskClass = '';
+        if (data.modelType === 'polyp') {
+            document.getElementById('riskLevel').textContent = '高风险';
+            riskClass = 'bg-red-100 text-red-800';
+
+            document.getElementById('mainFinding').textContent = '检测到肺结节病变';
+            document.getElementById('mainRecommendation').textContent = '立即就医';
+        } else if (data.modelType === 'breast') {
+            document.getElementById('riskLevel').textContent = '高风险';
+            riskClass = 'bg-red-100 text-red-800';
+
+            document.getElementById('mainFinding').textContent = '发现可疑结节';
+            document.getElementById('mainRecommendation').textContent = '立即就医';
+        } else {
+            document.getElementById('riskLevel').textContent = '低风险';
+            riskClass = 'bg-green-100 text-green-800';
+
+            document.getElementById('mainFinding').textContent = '未见明显异常';
+            document.getElementById('mainRecommendation').textContent = '年度体检';
+        }
+
+        document.getElementById('riskLevel').classList.add(...riskClass.split(' '));
+
+        // 设置详细分析
+        document.getElementById('detailedAnalysis').innerHTML = data.analysis || '<p>未提供详细分析</p>';
+
+        // 设置临床建议
+        let recommendations = '';
+        if (data.modelType === 'polyp') {
+            recommendations = `
+                    <p>1. 建议尽快进行钼靶检查和活检以明确诊断</p>
+                    <p>2. 避免自行用药，及时就医咨询专科医生</p>
+                    <p>3. 持良好心态，避免过度焦虑</p>
+                    <p>4. 家族成员也应进行相关筛查</p>
+                `;
+        } else if (data.modelType === 'breast') {
+            recommendations = `
+                    <p>1. 建议尽快进行钼靶检查和活检以明确诊断</p>
+                    <p>2. 避免自行用药，及时就医咨询专科医生</p>
+                    <p>3. 保持良好心态，避免过度焦虑</p>
+                    <p>4. 家族成员也应进行相关筛查</p>
+                `;
+        } else {
+            recommendations = `
+                    <p>1. 保持每年一次的常规体检</p>
+                    <p>2. 注意生活习惯，保持健康饮食和规律作息</p>
+                    <p>3. 如出现不适症状，应及时就医检查</p>
+                `;
+        }
+        document.getElementById('clinicalRecommendations').innerHTML = recommendations;
+
+        // 添加发现列表
+        const findingsList = document.getElementById('findingsList');
+        findingsList.innerHTML = '';
+
+        // 模拟发现项数据
+        const findings = [
+            {
+                id: 1,
+                location: '左肺上叶尖段',
+                size: '8mm×7mm',
+                性质: '磨玻璃结节',
+                description: '边界欠清，内部密度不均匀，建议密切随访'
+            },
+            {
+                id: 2,
+                location: '左肺下叶基底段',
+                size: '3mm×3mm',
+                性质: '实性结节',
+                description: '边界清晰，密度均匀，考虑良性可能性大'
+            },
+            {
+                id: 3,
+                location: '右肺中叶外侧段',
+                size: '4mm×3mm',
+                性质: '微小结节',
+                description: '边界清晰，考虑为炎性结节'
+            }
+        ];
+
+        findings.forEach(finding => {
+            const findingItem = document.createElement('div');
+            findingItem.className = 'findings-item p-4 border-b border-gray-100 cursor-pointer';
+            findingItem.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h3 class="font-medium text-gray-900">${finding.location}</h3>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">发现 ${finding.id}</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-1">大小: ${finding.size}</p>
+                <p class="text-xs text-gray-500">${finding.description}</p>
+            `;
+
+            findingItem.addEventListener('click', function () {
+                // 移除其他项的active类
+                document.querySelectorAll('.findings-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                // 给当前项添加active类
+                this.classList.add('active');
+
+                // 在影像上添加标记点（模拟）
+                addMarkerToImage(finding.id);
+            });
+
+            findingsList.appendChild(findingItem);
+        });
+
+        // 初始化密度分析图表
+        initDensityChart();
+    }
+
+    // 在影像上添加标记点
+    function addMarkerToImage(id) {
+        const markersContainer = document.getElementById('imageMarkers');
+        markersContainer.innerHTML = '';
+
+        // 不同发现项的标记点位置（模拟）
+        const markerPositions = {
+            1: {top: '30%', left: '40%'},
+            2: {top: '60%', left: '35%'},
+            3: {top: '45%', left: '65%'}
+        };
+
+        const position = markerPositions[id] || {top: '50%', left: '50%'};
+
+        const marker = document.createElement('div');
+        marker.className = 'absolute w-4 h-4 bg-primary rounded-full border-2 border-white animate-ping';
+        marker.style.top = position.top;
+        marker.style.left = position.left;
+
+        const markerDot = document.createElement('div');
+        markerDot.className = 'absolute w-4 h-4 bg-primary rounded-full border-2 border-white';
+        markerDot.style.top = position.top;
+        markerDot.style.left = position.left;
+
+        markersContainer.appendChild(marker);
+        markersContainer.appendChild(markerDot);
+    }
+
+    // 初始化密度分析图表
+    // 初始化密度分析图表，使用更真实的医学影像模拟数据
+    function initDensityChart() {
+        const ctx = document.getElementById('densityChart').getContext('2d');
+
+        // 生成符合医学影像特征的模拟数据
+        // CT值(HU)范围: -1000(空气) 到 1000(骨骼)
+        const labels = Array.from({length: 41}, (_, i) => (i - 20) * 100); // 从-2000到2000，步长100
+
+        // 生成模拟的密度分布数据（符合肺部CT特征）
+        // 肺部区域(-500到-100)有较高值，软组织(20-50)有次高峰，骨骼(300+)有少量分布
+        const values = labels.map(ctValue => {
+            if (ctValue >= -500 && ctValue <= -100) {
+                // 肺部区域 - 较高密度
+                return 800 - Math.abs(ctValue + 300) * 1.2;
+            } else if (ctValue >= 20 && ctValue <= 50) {
+                // 软组织区域 - 次高峰
+                return 400 - Math.abs(ctValue - 35) * 20;
+            } else if (ctValue >= 300 && ctValue <= 800) {
+                // 骨骼区域 - 低峰
+                return 200 - (ctValue - 300) * 0.2;
+            } else if (ctValue >= -1000 && ctValue <= -800) {
+                // 空气区域
+                return 150;
+            } else {
+                // 其他区域 - 平滑过渡
+                return 50 + Math.random() * 30;
+            }
+        });
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'CT值分布',
+                    data: values,
+                    borderColor: '#165DFF',
+                    backgroundColor: 'rgba(22, 93, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function (context) {
+                                return `频率: ${context.raw.toFixed(0)}，CT值: ${context.label} HU`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: '像素频率'
+                        },
+                        ticks: {
+                            callback: function (value) {
+                                return value.toFixed(0);
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'CT值 (Hounsfield单位)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // 打印报告功能
+    document.getElementById('printReport').addEventListener('click', function () {
+        window.print();
+    });
+
+    // 下载报告功能（模拟）
+    document.getElementById('downloadReport').addEventListener('click', function () {
+        alert('报告下载功能已触发，实际应用中会下载PDF格式报告');
+    });
+</script>
+</body>
+</html>

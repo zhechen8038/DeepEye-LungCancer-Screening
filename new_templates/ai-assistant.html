@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智瞳 AI - AI医生小助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Markdown 解析 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- 代码高亮 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5C87FF',
+                        secondary: '#36D399',
+                        accent: '#7E22CE',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#06B6D4',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .text-gradient {
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+
+            .chat-bubble-user {
+                background-color: #165DFF;
+                color: white;
+                border-radius: 18px 18px 4px 18px;
+            }
+
+            .chat-bubble-ai {
+                background-color: #f3f4f6;
+                color: #1e293b;
+                border-radius: 18px 18px 18px 4px;
+            }
+
+            .typing-animation {
+                display: inline-flex;
+                align-items: center;
+            }
+
+            .typing-animation span {
+                height: 8px;
+                width: 8px;
+                margin: 0 1px;
+                background-color: #C9D3E8;
+                border-radius: 50%;
+                display: inline-block;
+                animation: typing-bounce 1.4s infinite ease-in-out both;
+            }
+
+            .typing-animation span:nth-child(1) {
+                animation-delay: -0.32s;
+            }
+
+            .typing-animation span:nth-child(2) {
+                animation-delay: -0.16s;
+            }
+
+            @keyframes typing-bounce {
+                0%, 80%, 100% {
+                    transform: scale(0);
+                }
+                40% {
+                    transform: scale(1);
+                }
+            }
+            .message-appear {
+                animation: message-appear 0.3s ease-out forwards;
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            @keyframes message-appear {
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            .markdown-body {
+                line-height: 1.6;
+                word-wrap: break-word;
+            }
+
+            /* 添加这部分 */
+            .markdown-body strong {
+                color: #3498db;
+                font-weight: bold;
+            }
+
+            .markdown-body h1,
+            .markdown-body h2,
+            .markdown-body h3,
+            .markdown-body h4,
+            .markdown-body h5,
+            .markdown-body h6 {
+                margin-top: 1em;
+                margin-bottom: 0.5em;
+                font-weight: 600;
+            }
+
+            .markdown-body p {
+                margin-bottom: 1em;
+            }
+
+            .markdown-body ul,
+            .markdown-body ol {
+                margin-bottom: 1em;
+                padding-left: 2em;
+            }
+
+            .markdown-body li {
+                margin-bottom: 0.5em;
+            }
+
+            .markdown-body code {
+                background-color: rgba(175, 184, 193, 0.2);
+                border-radius: 6px;
+                padding: 0.2em 0.4em;
+                font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+                font-size: 0.9em;
+            }
+
+            .markdown-body pre {
+                background-color: #f6f8fa;
+                border-radius: 6px;
+                padding: 16px;
+                overflow: auto;
+                margin-bottom: 1em;
+            }
+
+            .markdown-body pre code {
+                background-color: transparent;
+                padding: 0;
+                border-radius: 0;
+            }
+
+            .markdown-body blockquote {
+                border-left: 4px solid #dfe2e5;
+                color: #6a737d;
+                padding: 0 1em;
+                margin: 0 0 1em 0;
+            }
+
+            .markdown-body table {
+                border-collapse: collapse;
+                width: 100%;
+                margin-bottom: 1em;
+            }
+
+            .markdown-body th,
+            .markdown-body td {
+                border: 1px solid #dfe2e5;
+                padding: 6px 13px;
+            }
+
+            .markdown-body th {
+                background-color: #f6f8fa;
+                font-weight: 600;
+            }
+
+            .markdown-body img {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+<!-- 导航栏 -->
+<nav id="mainNav" class="fixed w-full bg-white/90 backdrop-blur-md z-50 transition-all duration-300 shadow-sm">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="/go_to_index" class="flex items-center">
+                    <img src="{{ url_for('static', filename='img/zhitong_logo.jpg') }}" alt="智瞳AI" class="h-8 mr-2">
+                    <span class="text-xl font-bold text-primary">智瞳 AI</span>
+                </a>
+                <div class="hidden sm:ml-10 sm:flex space-x-8">
+                    <a href="{{ url_for('index') }}#features" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">功能</a>
+                    <a href="{{ url_for('index') }}#how-it-works" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">使用流程</a>
+                    <a href="{{ url_for('index') }}#testimonials" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">用户评价</a>
+                    <a href="{{ url_for('index') }}#faq" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">常见问题</a>
+                    <a href="/go_to_AIpage" class="text-primary px-3 py-2 text-sm font-medium transition-colors border-b-2 border-primary">AI医生小助手</a>
+                </div>
+            </div>
+            <div class="flex items-center">
+                <a href="/go_to_upload" class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-colors mr-4">
+                    <i class="fa fa-upload mr-2"></i>上传影像
+                </a>
+                <a href="/go_to_Login" class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary bg-white hover:bg-gray-50 transition-colors">
+                    <i class="fa fa-user-circle mr-2"></i>登录
+                </a>
+                <button type="button" class="sm:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary hover:bg-gray-100 focus:outline-none" id="mobileMenuButton">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移动端菜单 -->
+    <div class="sm:hidden hidden" id="mobileMenu">
+        <div class="px-2 pt-2 pb-3 space-y-1 bg-white shadow-lg">
+            <a href="{{ url_for('index') }}#features" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">功能</a>
+            <a href="{{ url_for('index') }}#how-it-works" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">使用流程</a>
+            <a href="{{ url_for('index') }}#testimonials" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">用户评价</a>
+            <a href="{{ url_for('index') }}#faq" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">常见问题</a>
+            <a href="/go_to_AIpage" class="block px-3 py-2 text-base font-medium text-primary bg-blue-50">AI医生小助手</a>
+            <a href="/go_to_upload" class="block px-3 py-2 text-base font-medium text-white bg-primary rounded-md mt-4 text-center">
+                <i class="fa fa-upload mr-2"></i>上传影像
+            </a>
+            <a href="/go_to_Login" class="block px-3 py-2 text-base font-medium text-primary border border-primary rounded-md text-center">
+                <i class="fa fa-user-circle mr-2"></i>登录
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- 页面内容 -->
+<main class="flex-grow pt-24 pb-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- 页面标题 -->
+        <div class="text-center mb-12">
+            <h1 class="text-3xl md:text-4xl font-bold mb-4">AI医生<span class="text-gradient bg-gradient-to-r from-primary to-accent">小助手</span></h1>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                7×24小时在线的智能健康顾问，为您提供专业的医疗咨询服务
+            </p>
+        </div>
+
+        <!-- 聊天界面 -->
+        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- 聊天头部 -->
+            <div class="bg-primary text-white p-4 flex items-center">
+                <div class="w-12 h-12 rounded-full overflow-hidden mr-4">
+                    <img src="{{ url_for('static', filename='img/ai-assistant.png') }}" alt="AI医生小助手"
+                         class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <h3 class="font-bold">智瞳小安</h3>
+                    <p class="text-sm text-white/80">基于DeepSeek医疗大模型</p>
+                </div>
+                <div class="ml-auto flex space-x-3">
+                    <button class="text-white/80 hover:text-white transition-colors">
+                        <i class="fa fa-phone"></i>
+                    </button>
+                    <button class="text-white/80 hover:text-white transition-colors">
+                        <i class="fa fa-video-camera"></i>
+                    </button>
+                    <button class="text-white/80 hover:text-white transition-colors">
+                        <i class="fa fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 聊天内容区域 -->
+            <div id="chatContainer" class="h-[60vh] overflow-y-auto p-6 space-y-4 bg-gray-50">
+                <!-- 欢迎消息 -->
+                <div class="flex items-start message-appear">
+                    <div class="w-10 h-10 rounded-full overflow-hidden mr-3 flex-shrink-0">
+                        <img src="{{ url_for('static', filename='img/ai-assistant.png') }}" alt="AI医生小助手"
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="max-w-[80%]">
+                        <div class="chat-bubble-ai p-4 shadow-sm">
+                            <p>
+                                您好！我是智瞳小安，您的智能健康顾问。我可以帮您解读医学影像报告、提供疾病预防建议、用药指导和康复护理方案。请问有什么可以帮助您的？</p>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1">刚刚</div>
+                    </div>
+                </div>
+
+                <!-- 预设问题 -->
+                <div class="flex justify-center mt-4 message-appear" style="animation-delay: 0.2s;">
+                    <div class="inline-flex flex-wrap gap-2 justify-center">
+                        <button class="px-4 py-2 bg-white text-primary border border-primary/30 rounded-full text-sm hover:bg-primary/5 transition-colors"
+                                onclick="addUserMessage('如何解读PET-CT影像报告？')">
+                            如何解读PET-CT报告？
+                        </button>
+                        <button class="px-4 py-2 bg-white text-primary border border-primary/30 rounded-full text-sm hover:bg-primary/5 transition-colors"
+                                onclick="addUserMessage('乳腺癌术后如何康复护理？')">
+                            乳腺癌术后康复护理
+                        </button>
+                        <button class="px-4 py-2 bg-white text-primary border border-primary/30 rounded-full text-sm hover:bg-primary/5 transition-colors"
+                                onclick="addUserMessage('高血压患者应该注意什么？')">
+                            高血压注意事项
+                        </button>
+                        <button class="px-4 py-2 bg-white text-primary border border-primary/30 rounded-full text-sm hover:bg-primary/5 transition-colors"
+                                onclick="addUserMessage('如何预防糖尿病？')">
+                            如何预防糖尿病？
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <button id="voiceInputBtn"
+                            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
+                        <i class="fa fa-microphone"></i>
+                    </button>
+                    <div class="flex-grow relative">
+                        <input type="text" id="messageInput" placeholder="输入您的问题..."
+                               class="w-full px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all pr-12">
+                        <button id="sendBtn"
+                                class="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center hover:bg-primary/90 transition-colors">
+                            <i class="fa fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <button id="uploadFileBtn"
+                            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
+                        <i class="fa fa-paperclip"></i>
+                    </button>
+                </div>
+                <div class="text-xs text-gray-500 mt-2">
+                    提示：请不要输入紧急医疗情况，如有紧急情况请立即就医
+                </div>
+            </div>
+        </div>
+
+        <!-- 功能说明 -->
+        <div class="mt-16 max-w-4xl mx-auto">
+            <h3 class="text-xl font-bold mb-6">AI医生小助手能为您做什么？</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mr-4">
+                            <i class="fa fa-file-text-o text-xl"></i>
+                        </div>
+                        <h4 class="font-bold text-lg">影像报告解读</h4>
+                    </div>
+                    <p class="text-gray-600">
+                        解读各种医学影像报告，包括MRI、PET-CT、内窥镜等，帮助您理解检查结果和可能的诊断。
+                    </p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mr-4">
+                            <i class="fa fa-medkit text-xl"></i>
+                        </div>
+                        <h4 class="font-bold text-lg">疾病预防建议</h4>
+                    </div>
+                    <p class="text-gray-600">
+                        根据您的年龄、性别、生活习惯和家族病史，提供个性化的疾病预防建议和健康管理方案。
+                    </p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mr-4">
+                            <i class="fa fa-stethoscope text-xl"></i>
+                        </div>
+                        <h4 class="font-bold text-lg">用药指导</h4>
+                    </div>
+                    <p class="text-gray-600">
+                        解答关于药物使用的疑问，包括用药方法、剂量、副作用、药物相互作用等问题。
+                    </p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-md card-hover">
+                    <div class="flex items-center mb-4">
+                        <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mr-4">
+                            <i class="fa fa-heartbeat text-xl"></i>
+                        </div>
+                        <h4 class="font-bold text-lg">康复护理方案</h4>
+                    </div>
+                    <p class="text-gray-600">
+                        提供术后康复、慢性病管理和健康生活方式的建议，帮助您恢复健康并保持良好状态。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- 页脚 -->
+<footer class="bg-dark text-white pt-16 pb-8">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+            <div>
+                <div class="flex items-center mb-6">
+                    <img src="{{ url_for('static', filename='img/zhitong_logo.jpg') }}" alt="智瞳AI" class="h-8 mr-2">
+                    <span class="text-xl font-bold">智瞳 AI</span>
+                </div>
+                <p class="text-gray-400 mb-6">
+                    利用先进的AI技术，提供精准的医学影像分析、疾病风险评估和个性化健康方案，助力早发现、早治疗。
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-weixin text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-weibo text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-linkedin text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-youtube-play text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-lg font-bold mb-6">快速链接</h4>
+                <ul class="space-y-3">
+                    <li><a href="{{ url_for('index') }}#features" class="text-gray-400 hover:text-white transition-colors">功能介绍</a></li>
+                    <li><a href="{{ url_for('index') }}#how-it-works" class="text-gray-400 hover:text-white transition-colors">使用流程</a></li>
+                    <li><a href="/go_to_upload" class="text-gray-400 hover:text-white transition-colors">上传影像</a></li>
+                    <li><a href="/go_to_AIpage" class="text-gray-400 hover:text-white transition-colors">AI医生小助手</a></li>
+                    <li><a href="{{ url_for('index') }}#testimonials" class="text-gray-400 hover:text-white transition-colors">用户评价</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-lg font-bold mb-6">服务支持</h4>
+                <ul class="space-y-3">
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">隐私政策</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">使用条款</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">服务协议</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">退款政策</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">帮助中心</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-lg font-bold mb-6">订阅更新</h4>
+                <p class="text-gray-400 mb-4">订阅我们的通讯，获取最新的医疗AI资讯和平台更新</p>
+                <form class="space-y-3">
+                    <div>
+                        <input type="email" placeholder="您的邮箱地址" class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    </div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+                        订阅
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="border-t border-gray-800 pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm">© 2025 智瞳 AI. 保留所有权利。</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">隐私政策</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">使用条款</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Cookie政策</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script>
+    // 导航栏滚动效果
+    window.addEventListener('scroll', function() {
+        const nav = document.getElementById('mainNav');
+        if (window.scrollY > 50) {
+            nav.classList.add('shadow-md');
+            nav.classList.remove('shadow-sm');
+        } else {
+            nav.classList.remove('shadow-md');
+            nav.classList.add('shadow-sm');
+        }
+    });
+
+    // 移动端菜单
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    mobileMenuButton.addEventListener('click', function() {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                window.scrollTo({
+                    top: targetElement.offsetTop - 80,
+                    behavior: 'smooth'
+                });
+
+                // 关闭移动端菜单
+                if (!mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                }
+            }
+        });
+    });
+
+    // 聊天功能
+    const chatContainer = document.getElementById('chatContainer');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const voiceInputBtn = document.getElementById('voiceInputBtn');
+    const uploadFileBtn = document.getElementById('uploadFileBtn');
+
+    // 配置marked
+    marked.setOptions({
+        breaks: true,
+        highlight: function(code, lang) {
+            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+            return hljs.highlight(code, { language }).value;
+        },
+        mangle: false,
+        headerIds: false
+    });
+    // 发送消息
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        // 添加用户消息到聊天窗口
+        addUserMessage(message);
+
+        // 清空输入框
+        messageInput.value = '';
+
+        // 显示AI正在输入
+        showTypingIndicator();
+
+        // 发送消息到后端API
+        fetch('/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message }),
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // 移除打字指示器
+            removeTypingIndicator();
+
+            // 添加AI回复到聊天窗口
+            addAIResponse(data.reply);
+        })
+        .catch(error => {
+            // 移除打字指示器
+            removeTypingIndicator();
+
+            console.error('Error:', error);
+            addAIResponse('抱歉，发生了错误，请稍后再试。');
+        });
+    }
+
+    // 添加用户消息到聊天窗口
+    function addUserMessage(message) {
+        const now = new Date();
+        const timeString = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+        const messageHtml = `
+            <div class="flex items-start justify-end message-appear">
+                <div class="max-w-[80%]">
+                    <div class="chat-bubble-user p-4 shadow-sm">
+                        <p>${message}</p>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1 text-right">${timeString}</div>
+                </div>
+                <div class="w-10 h-10 rounded-full overflow-hidden ml-3 flex-shrink-0">
+                    <img src="{{ url_for('static', filename='img/user.png') }}" alt="用户头像" class="w-full h-full object-cover">
+                </div>
+            </div>
+        `;
+
+        chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // 添加AI回复到聊天窗口
+    function addAIResponse(response) {
+        const now = new Date();
+        const timeString = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+        // 使用marked解析Markdown
+        const htmlContent = marked.parse(response);
+
+        const messageHtml = `
+            <div class="flex items-start message-appear">
+                <div class="w-10 h-10 rounded-full overflow-hidden mr-3 flex-shrink-0">
+                    <img src="{{ url_for('static', filename='img/ai-assistant.png') }}" alt="AI医生小助手" class="w-full h-full object-cover">
+                </div>
+                <div class="max-w-[80%]">
+                    <div class="chat-bubble-ai p-4 shadow-sm markdown-body">
+                        ${htmlContent}
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">${timeString}</div>
+                </div>
+            </div>
+        `;
+
+        chatContainer.insertAdjacentHTML('beforeend', messageHtml);
+
+        // 高亮代码块
+        document.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+        });
+
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // 显示AI正在输入
+    function showTypingIndicator() {
+        const typingHtml = `
+            <div class="flex items-start" id="typingIndicator">
+                <div class="w-10 h-10 rounded-full overflow-hidden mr-3 flex-shrink-0">
+                    <img src="{{ url_for('static', filename='img/ai-assistant.png') }}" alt="AI医生小助手" class="w-full h-full object-cover">
+                </div>
+                <div class="max-w-[80%]">
+                    <div class="chat-bubble-ai p-4 shadow-sm">
+                        <div class="typing-animation">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        chatContainer.insertAdjacentHTML('beforeend', typingHtml);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    // 移除打字指示器
+    function removeTypingIndicator() {
+        const typingIndicator = document.getElementById('typingIndicator');
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+    }
+
+    // 绑定发送按钮点击事件
+    sendBtn.addEventListener('click', sendMessage);
+
+    // 绑定输入框回车事件
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // 语音输入功能
+    voiceInputBtn.addEventListener('click', function() {
+        if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+            alert('您的浏览器不支持语音输入功能');
+            return;
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        recognition.lang = 'zh-CN';
+        recognition.interimResults = false;
+
+        voiceInputBtn.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i>';
+
+        recognition.onresult = function(event) {
+            const speechResult = event.results[0][0].transcript;
+            messageInput.value = speechResult;
+            voiceInputBtn.innerHTML = '<i class="fa fa-microphone"></i>';
+        };
+
+        recognition.onerror = function(event) {
+            console.error('语音识别错误:', event.error);
+            voiceInputBtn.innerHTML = '<i class="fa fa-microphone"></i>';
+        };
+
+        recognition.onend = function() {
+            voiceInputBtn.innerHTML = '<i class="fa fa-microphone"></i>';
+        };
+
+        recognition.start();
+    });
+
+    // 文件上传功能
+    uploadFileBtn.addEventListener('click', function() {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.jpg,.jpeg,.png,.pdf,.dcm';
+
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const fileName = file.name;
+                const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+
+                // 显示上传的文件信息
+                addUserMessage(`已上传文件: ${fileName} (${fileSize} MB)`);
+
+                // 显示AI正在输入
+                showTypingIndicator();
+
+                // 创建FormData对象
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // 发送文件到后端API
+                fetch('/analyze_file', {
+                    method: 'POST',
+                    body: formData,
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 移除打字指示器
+                    removeTypingIndicator();
+
+                    // 添加AI回复到聊天窗口
+                    addAIResponse(data.reply);
+                })
+                .catch(error => {
+                    // 移除打字指示器
+                    removeTypingIndicator();
+
+                    console.error('Error:', error);
+                    addAIResponse('抱歉，文件分析失败，请稍后再试。');
+                });
+            }
+        });
+
+        fileInput.click();
+    });
+</script>
+</body>
+</html>

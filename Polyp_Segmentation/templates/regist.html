@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - 智瞳</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f9f9 0%, #e6f2ff 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-size: 200% 200%;
+            animation: gradientBg 15s ease infinite;
+        }
+
+        @keyframes gradientBg {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .register-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            width: 400px;
+            max-width: 90%;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .register-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            padding: 0.75rem 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #1A73E8;
+            box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.2);
+            outline: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1A73E8 0%, #165DBA 100%);
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #165DBA 0%, #1A73E8 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+        }
+
+        .password-strength {
+            display: flex;
+            margin-top: 0.5rem;
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .strength-bar {
+            flex: 1;
+            margin-right: 2px;
+            transition: width 0.3s ease;
+        }
+
+        .login-link {
+            color: #1A73E8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .login-link:hover {
+            color: #165DBA;
+            text-decoration: underline;
+        }
+
+        /* 自定义提示框样式 */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+
+        .toast {
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transform: translateX(150%);
+            transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-header {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .bg-success {
+            background-color: #4CAF50 !important;
+        }
+
+        .bg-danger {
+            background-color: #F44336 !important;
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .form-control.success {
+            border-color: #4CAF50;
+        }
+
+        .form-control.error {
+            border-color: #F44336;
+        }
+
+        .validation-icon.success {
+            color: #4CAF50;
+        }
+
+        .validation-icon.error {
+            color: #F44336;
+        }
+    </style>
+</head>
+<body>
+<div class="register-container">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-primary">注册新账号</h2>
+        <p class="text-muted mt-2">创建您的智瞳账户</p>
+    </div>
+    <form id="registerForm">
+        <div class="mb-4 form-group">
+            <label for="username" class="form-label">用户名</label>
+            <div class="position-relative">
+                <input type="text" class="form-control" id="username" name="username" required
+                       placeholder="请输入用户名">
+                <i class="fa fa-user form-icon"></i>
+                <i class="fa fa-check-circle validation-icon success d-none"></i>
+                <i class="fa fa-times-circle validation-icon error d-none"></i>
+            </div>
+            <div class="text-danger mt-1 d-none" id="usernameError"></div>
+        </div>
+
+        <div class="mb-4 form-group">
+            <label for="email" class="form-label">电子邮箱</label>
+            <div class="position-relative">
+                <input type="email" class="form-control" id="email" name="email" required placeholder="请输入电子邮箱">
+                <i class="fa fa-envelope form-icon"></i>
+                <i class="fa fa-check-circle validation-icon success d-none"></i>
+                <i class="fa fa-times-circle validation-icon error d-none"></i>
+            </div>
+            <div class="text-danger mt-1 d-none" id="emailError"></div>
+        </div>
+
+        <div class="mb-4 form-group">
+            <label for="password" class="form-label">密码</label>
+            <div class="position-relative">
+                <input type="password" class="form-control" id="password" name="password" required
+                       placeholder="请输入密码">
+                <i class="fa fa-eye-slash form-icon toggle-password"></i>
+            </div>
+            <div class="password-strength">
+                <div class="strength-bar" style="background-color: #eee;"></div>
+                <div class="strength-bar" style="background-color: #eee;"></div>
+                <div class="strength-bar" style="background-color: #eee;"></div>
+                <div class="strength-bar" style="background-color: #eee;"></div>
+            </div>
+            <div class="text-xs text-muted mt-1">密码长度至少8位，包含大小写字母和数字</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">
+            <i class="fa fa-user-plus mr-2"></i>注册
+        </button>
+        <div class="text-center mt-4">
+            已有账号？<a href="/go_to_Login" class="login-link">立即登录</a>
+        </div>
+    </form>
+</div>
+
+<!-- 统一提示框 -->
+<div class="toast-container">
+    <div id="registerToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="3000">
+        <div class="toast-header">
+            <strong class="me-auto"><i class="fa fa-exclamation-circle mr-2"></i>系统提示</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function () {
+        const toastEl = document.getElementById('registerToast')
+        const toast = new bootstrap.Toast(toastEl)
+        const $submitBtn = $('#registerForm button[type="submit"]')
+        const $password = $('#password')
+        const $strengthBars = $('.strength-bar')
+
+        // 密码可见性切换
+        $('.toggle-password').on('click', function () {
+            const type = $password.attr('type') === 'password' ? 'text' : 'password';
+            $password.attr('type', type);
+            $(this).toggleClass('fa-eye fa-eye-slash');
+        });
+
+        // 实时密码强度检测
+        $password.on('input', function () {
+            const password = $(this).val();
+            const strength = checkPasswordStrength(password);
+
+            // 更新强度条
+            $strengthBars.each(function (index) {
+                if (index < strength) {
+                    $(this).css('background-color', getStrengthColor(strength));
+                } else {
+                    $(this).css('background-color', '#eee');
+                }
+            });
+        });
+
+        // 简单的密码强度检测
+        function checkPasswordStrength(password) {
+            let strength = 0;
+
+            if (password.length >= 8) strength++;
+            if (password.match(/[A-Z]/)) strength++;
+            if (password.match(/[a-z]/)) strength++;
+            if (password.match(/[0-9]/)) strength++;
+
+            return strength;
+        }
+
+        // 根据强度获取颜色
+        function getStrengthColor(strength) {
+            switch (strength) {
+                case 1:
+                    return '#F44336'; // 弱
+                case 2:
+                    return '#FFC107'; // 中
+                case 3:
+                    return '#4CAF50'; // 强
+                case 4:
+                    return '#2E7D32'; // 非常强
+                default:
+                    return '#eee';
+            }
+        }
+
+        // 表单验证
+        $('#username, #email').on('blur', function () {
+            const field = $(this).attr('id');
+            const value = $(this).val().trim();
+            const $error = $(`#${field}Error`);
+            const $field = $(this);
+            const $successIcon = $(this).nextAll('.validation-icon.success');
+            const $errorIcon = $(this).nextAll('.validation-icon.error');
+
+            let isValid = true;
+            let errorMsg = '';
+
+            if (value === '') {
+                isValid = false;
+                errorMsg = '此字段不能为空';
+            } else if (field === 'email' && !/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/.test(value)) {
+                isValid = false;
+                errorMsg = '请输入有效的电子邮箱';
+            }
+
+            if (isValid) {
+                $field.removeClass('error').addClass('success');
+                $successIcon.removeClass('d-none');
+                $errorIcon.addClass('d-none');
+                $error.addClass('d-none').text('');
+            } else {
+                $field.removeClass('success').addClass('error');
+                $successIcon.addClass('d-none');
+                $errorIcon.removeClass('d-none');
+                $error.removeClass('d-none').text(errorMsg);
+            }
+        });
+
+        // 统一错误处理方法
+        function showError(message = '注册失败，请检查信息后重试') {
+            $('.toast-header strong').html('<i class="fa fa-times-circle mr-2"></i>注册失败');
+            $('.toast-body').text(message);
+            $('.toast-header').removeClass('bg-success').addClass('bg-danger text-white');
+            toast.show();
+            $submitBtn.prop('disabled', false).html('<i class="fa fa-user-plus mr-2"></i>注册'); // 恢复按钮状态
+        }
+
+        $('#registerForm').submit(function (e) {
+            e.preventDefault();
+            $submitBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin mr-2"></i>注册中...');
+
+            // 基础前端验证
+            const username = $('#username').val().trim();
+            const email = $('#email').val().trim();
+            const password = $('#password').val().trim();
+
+            if (!username || !email || !password) {
+                showError('所有字段均为必填项');
+                return;
+            }
+
+            // 简单邮箱格式验证
+            if (!/^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/.test(email)) {
+                showError('请输入有效的电子邮箱');
+                return;
+            }
+
+            // 密码强度验证
+            if (checkPasswordStrength(password) < 3) {
+                showError('密码强度不足，请使用至少8位，包含大小写字母和数字的密码');
+                return;
+            }
+
+            $.post('/register', $(this).serialize())
+                    .done(function (data) {
+                        if (data.success) {
+                            // 注册成功处理
+                            $('.toast-header strong').html('<i class="fa fa-check-circle mr-2"></i>注册成功');
+                            $('.toast-body').text('正在跳转到登录页面...');
+                            $('.toast-header').removeClass('bg-danger').addClass('bg-success text-white');
+                            toast.show();
+
+                            setTimeout(() => {
+                                window.location.href = '/go_to_Login';
+                            }, 2000);
+                        } else {
+                            showError(data.error || '注册信息不符合要求');
+                        }
+                    })
+                    .fail(function (xhr) {
+                        // 尝试解析服务端错误信息
+                        const serverError = xhr.responseJSON?.error;
+                        showError(serverError || '网络连接异常，请稍后重试');
+                    });
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智瞳 AI - 医疗影像诊断平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        accent: '#7E22CE',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#06B6D4',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .text-gradient {
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+<!-- 导航栏 -->
+<nav id="mainNav" class="fixed w-full bg-white/90 backdrop-blur-md z-50 transition-all duration-300 shadow-sm">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="index.html" class="flex items-center">
+                    <img src="{{ url_for('static', filename='img/zhitong_logo.jpg') }}" alt="智瞳AI" class="h-8 mr-2">
+                    <span class="text-xl font-bold text-primary">智瞳 AI</span>
+                </a>
+                <div class="hidden sm:ml-10 sm:flex space-x-8">
+                    <a href="#features" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">功能</a>
+                    <a href="#how-it-works" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">使用流程</a>
+                    <a href="#testimonials" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">用户评价</a>
+                    <a href="#faq" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">常见问题</a>
+                    <a href="/go_to_visualization" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">数据分析</a>
+                    <a href="/go_to_AIpage" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">AI医生小助手</a>
+                    <a href="/go_to_knowledge" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">知识科普</a>
+                </div>
+            </div>
+            <div class="flex items-center">
+                <a href="/go_to_upload" class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-colors mr-4">
+                    <i class="fa fa-upload mr-2"></i>上传影像
+                </a>
+                <a href="/go_to_Login" class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary bg-white hover:bg-gray-50 transition-colors">
+                    <i class="fa fa-user-circle mr-2"></i>登录
+                </a>
+                <button type="button" class="sm:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary hover:bg-gray-100 focus:outline-none" id="mobileMenuButton">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移动端菜单 -->
+    <div class="sm:hidden hidden" id="mobileMenu">
+        <div class="px-2 pt-2 pb-3 space-y-1 bg-white shadow-lg">
+            <a href="#features" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">功能</a>
+            <a href="#how-it-works" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">使用流程</a>
+            <a href="#testimonials" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">用户评价</a>
+            <a href="#faq" class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">常见问题</a>
+            <a href="/go_to_upload" class="block px-3 py-2 text-base font-medium text-white bg-primary rounded-md mt-4 text-center">
+                <i class="fa fa-upload mr-2"></i>上传影像
+            </a>
+            <a href="#login" class="block px-3 py-2 text-base font-medium text-primary border border-primary rounded-md text-center">
+                <i class="fa fa-user-circle mr-2"></i>登录
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- 英雄区域 -->
+<header class="pt-24 pb-16 md:pt-32 md:pb-24 bg-gradient-to-br from-primary/5 to-accent/5">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col md:flex-row items-center">
+            <div class="w-full md:w-1/2 mb-10 md:mb-0">
+                <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-tight text-dark">
+                    AI驱动的<span class="text-gradient bg-gradient-to-r from-primary to-accent">医疗影像诊断</span>
+                </h1>
+                <p class="mt-4 text-lg text-gray-600 max-w-xl">
+                    利用先进的AI技术，提供精准的医学影像分析、疾病风险评估和个性化健康方案，助力早发现、早治疗。
+                </p>
+                <div class="mt-8 flex flex-wrap gap-4">
+                    <a href="/go_to_upload" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                        <i class="fa fa-rocket mr-2"></i>开始使用
+                    </a>
+                    <a href="#how-it-works" class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-all">
+                        <i class="fa fa-play-circle-o mr-2"></i>了解更多
+                    </a>
+                </div>
+                <div class="mt-12 flex items-center">
+                    <div class="flex -space-x-2">
+                        <img class="w-10 h-10 rounded-full border-2 border-white" src="https://picsum.photos/200/200?random=1" alt="用户头像">
+                        <img class="w-10 h-10 rounded-full border-2 border-white" src="https://picsum.photos/200/200?random=2" alt="用户头像">
+                        <img class="w-10 h-10 rounded-full border-2 border-white" src="https://picsum.photos/200/200?random=3" alt="用户头像">
+                        <img class="w-10 h-10 rounded-full border-2 border-white" src="https://picsum.photos/200/200?random=4" alt="用户头像">
+                    </div>
+                    <div class="ml-4">
+                        <div class="flex items-center">
+                            <div class="flex">
+                                <i class="fa fa-star text-yellow-400"></i>
+                                <i class="fa fa-star text-yellow-400"></i>
+                                <i class="fa fa-star text-yellow-400"></i>
+                                <i class="fa fa-star text-yellow-400"></i>
+                                <i class="fa fa-star text-yellow-400"></i>
+                            </div>
+                            <span class="ml-2 text-sm font-medium text-gray-700">4.9/5</span>
+                        </div>
+                        <p class="text-sm text-gray-500">来自2,500+医疗专业人士的信任</p>
+                    </div>
+                </div>
+            </div>
+            <div class="w-full md:w-1/2">
+                <div class="relative">
+                    <div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-2xl transform rotate-6"></div>
+                    <img src="{{ url_for('static', filename='img/index.png') }}" alt="医疗AI诊断展示" class="relative z-10 rounded-2xl shadow-2xl w-full">
+                    <div class="absolute -bottom-5 -right-5 bg-white p-4 rounded-xl shadow-lg z-20 card-hover">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary mr-3">
+                                <i class="fa fa-check-circle text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900">准确率提升</h4>
+                                <p class="text-sm text-gray-500">诊断准确率提高92%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- 信任标识 -->
+<section class="py-10 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <p class="text-center text-sm font-medium text-gray-500 uppercase tracking-wider mb-8">受到医疗行业的信任</p>
+        <div class="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+            <div class="flex items-center">
+                <i class="fa fa-hospital-o text-4xl text-gray-400"></i>
+                <span class="ml-3 text-lg font-medium text-gray-700">三甲医院</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fa fa-stethoscope text-4xl text-gray-400"></i>
+                <span class="ml-3 text-lg font-medium text-gray-700">专业医师</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fa fa-medkit text-4xl text-gray-400"></i>
+                <span class="ml-3 text-lg font-medium text-gray-700">医疗机构</span>
+            </div>
+            <div class="flex items-center">
+                <i class="fa fa-graduation-cap text-4xl text-gray-400"></i>
+                <span class="ml-3 text-lg font-medium text-gray-700">科研院所</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 功能介绍 -->
+<section id="features" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">我们的核心<span class="text-gradient bg-gradient-to-r from-primary to-accent">功能</span></h2>
+            <p class="text-lg text-gray-600">利用先进的AI技术，提供全方位的医疗影像分析服务</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                <div class="w-14 h-14 bg-primary/10 rounded-lg flex items-center justify-center text-primary mb-6">
+                    <i class="fa fa-search-plus text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">精准影像分析</h3>
+                <p class="text-gray-600 mb-4">利用深度学习技术，对MRI超声、PET-CT、内窥镜等多种医学影像进行精准分析，检测病变和异常情况。</p>
+                <a href="#" class="text-primary font-medium inline-flex items-center">
+                    了解更多 <i class="fa fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                <div class="w-14 h-14 bg-secondary/10 rounded-lg flex items-center justify-center text-secondary mb-6">
+                    <i class="fa fa-bar-chart text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">疾病风险评估</h3>
+                <p class="text-gray-600 mb-4">基于影像分析结果，结合临床数据，提供全面的疾病风险评估和预后预测。</p>
+                <a href="#" class="text-primary font-medium inline-flex items-center">
+                    了解更多 <i class="fa fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                <div class="w-14 h-14 bg-accent/10 rounded-lg flex items-center justify-center text-accent mb-6">
+                    <i class="fa fa-file-text-o text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-3">专业报告生成</h3>
+                <p class="text-gray-600 mb-4">自动生成详细的诊断报告，包含影像分析结果、疾病风险评估和治疗建议，辅助医生做出决策。</p>
+                <a href="#" class="text-primary font-medium inline-flex items-center">
+                    了解更多 <i class="fa fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center">
+            <a href="/go_to_upload" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                <i class="fa fa-rocket mr-2"></i>立即体验
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 使用流程 -->
+<section id="how-it-works" class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">使用<span class="text-gradient bg-gradient-to-r from-primary to-accent">流程</span></h2>
+            <p class="text-lg text-gray-600">简单几步，即可获取专业的医疗影像分析结果</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-primary text-2xl font-bold mx-auto mb-6">1</div>
+                <h3 class="text-xl font-bold mb-3">上传影像</h3>
+                <p class="text-gray-600">选择并上传您的医学影像文件，支持多种格式和类型</p>
+            </div>
+
+            <div class="text-center">
+                <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-primary text-2xl font-bold mx-auto mb-6">2</div>
+                <h3 class="text-xl font-bold mb-3">AI分析</h3>
+                <p class="text-gray-600">我们的AI系统会对影像进行全面分析，检测病变和异常情况</p>
+            </div>
+
+            <div class="text-center">
+                <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center text-primary text-2xl font-bold mx-auto mb-6">3</div>
+                <h3 class="text-xl font-bold mb-3">获取结果</h3>
+                <p class="text-gray-600">获取详细的分析报告和专业建议，与您的医生分享</p>
+            </div>
+        </div>
+
+        <div class="mt-12 flex justify-center">
+            <a href="/go_to_upload" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                <i class="fa fa-upload mr-2"></i>上传影像开始分析
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 用户评价 -->
+<section id="testimonials" class="py-20 bg-gray-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">用户<span class="text-gradient bg-gradient-to-r from-primary to-accent">评价</span></h2>
+            <p class="text-lg text-gray-600">看看其他医疗专业人士如何评价我们的服务</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                <div class="flex">
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                </div>
+                <p class="text-gray-600 mt-4">"智瞳 AI的影像分析系统帮助我们显著提高了诊断效率，特别是在繁忙时段。AI分析结果为我们提供了有价值的参考，减少了漏诊风险。"</p>
+                <div class="mt-6 flex items-center">
+                    <img src="https://picsum.photos/100/100?random=21" alt="医生头像" class="w-12 h-12 rounded-full mr-4">
+                    <div>
+                        <h4 class="font-medium">张医生</h4>
+                        <p class="text-sm text-gray-500">三甲医院放射科主任</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                <div class="flex">
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                </div>
+                <p class="text-gray-600 mt-4">"作为一名基层医院的医生，我们经常面临复杂病例的诊断难题。智瞳 AI为我们提供了专业级的诊断支持，让我们能够更好地服务患者。"</p>
+                <div class="mt-6 flex items-center">
+                    <img src="https://picsum.photos/100/100?random=22" alt="医生头像" class="w-12 h-12 rounded-full mr-4">
+                    <div>
+                        <h4 class="font-medium">李医生</h4>
+                        <p class="text-sm text-gray-500">社区医院全科医生</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-8 card-hover">
+                <div class="flex">
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star text-yellow-400"></i>
+                    <i class="fa fa-star-half-o text-yellow-400"></i>
+                </div>
+                <p class="text-gray-600 mt-4">"我们医院引入了智瞳 AI系统后，患者等待诊断结果的时间缩短了70%。系统操作简单直观，报告详细专业，是临床工作的得力助手。"</p>
+                <div class="mt-6 flex items-center">
+                    <img src="https://picsum.photos/100/100?random=23" alt="医生头像" class="w-12 h-12 rounded-full mr-4">
+                    <div>
+                        <h4 class="font-medium">王医生</h4>
+                        <p class="text-sm text-gray-500">肿瘤专科医院主治医师</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 常见问题 -->
+<section id="faq" class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto mb-16">
+            <h2 class="text-3xl md:text-4xl font-bold mb-4">常见<span class="text-gradient bg-gradient-to-r from-primary to-accent">问题</span></h2>
+            <p class="text-lg text-gray-600">解答您可能关心的问题</p>
+        </div>
+
+        <div class="max-w-3xl mx-auto space-y-6">
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <button class="w-full px-6 py-4 text-left font-medium flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
+                    <span>智瞳 AI支持哪些类型的医学影像？</span>
+                    <i class="fa fa-plus text-primary"></i>
+                </button>
+                <div class="px-6 py-4 bg-gray-50 hidden">
+                    <p class="text-gray-600">智瞳 AI目前支持MRI、超声、PET-CT和内窥镜等多种医学影像类型，覆盖消化道、胃部、乳腺、甲状腺、肝脏等多个部位的检查。</p>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <button class="w-full px-6 py-4 text-left font-medium flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
+                    <span>AI分析结果的准确性如何？</span>
+                    <i class="fa fa-plus text-primary"></i>
+                </button>
+                <div class="px-6 py-4 bg-gray-50 hidden">
+                    <p class="text-gray-600">我们的AI模型经过数万例医学影像的训练和验证，在多个临床测试中表现出与资深放射科医生相当的诊断准确率。但请注意，AI分析结果仅供医疗专业人士参考，不能替代专业的医学诊断。</p>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <button class="w-full px-6 py-4 text-left font-medium flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
+                    <span>上传的影像数据安全性如何保障？</span>
+                    <i class="fa fa-plus text-primary"></i>
+                </button>
+                <div class="px-6 py-4 bg-gray-50 hidden">
+                    <p class="text-gray-600">我们高度重视用户数据的安全和隐私。所有上传的影像数据都会进行端到端加密处理，并严格遵守医疗数据隐私法规。数据仅用于诊断目的，不会共享给第三方，且会在规定时间后安全销毁。</p>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <button class="w-full px-6 py-4 text-left font-medium flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
+                    <span>如何获取详细的分析报告？</span>
+                    <i class="fa fa-plus text-primary"></i>
+                </button>
+                <div class="px-6 py-4 bg-gray-50 hidden">
+                    <p class="text-gray-600">上传影像并完成分析后，系统会自动生成详细的分析报告，包括影像分析结果、疾病风险评估和治疗建议。您可以在线查看报告，也可以下载PDF格式保存或与您的医生分享。</p>
+                </div>
+            </div>
+
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <button class="w-full px-6 py-4 text-left font-medium flex justify-between items-center hover:bg-gray-50 transition-colors" onclick="toggleFaq(this)">
+                    <span>智瞳 AI适合哪些用户？</span>
+                    <i class="fa fa-plus text-primary"></i>
+                </button>
+                <div class="px-6 py-4 bg-gray-50 hidden">
+                    <p class="text-gray-600">智瞳 AI主要面向医疗专业人士，包括放射科医生、全科医生、专科医生等，辅助他们进行医学影像诊断。同时，我们也为医疗机构提供定制化解决方案，帮助提升整体诊断效率和质量。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-12 text-center">
+            <a href="/go_to_upload" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                <i class="fa fa-question-circle mr-2"></i>还有其他问题？联系我们
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="bg-dark text-white pt-16 pb-8">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+            <div>
+                <div class="flex items-center mb-6">
+                    <img src="{{ url_for('static', filename='img/zhitong_logo.jpg') }}" alt="智瞳AI" class="h-8 mr-2">
+                    <span class="text-xl font-bold">智瞳 AI</span>
+                </div>
+                <p class="text-gray-400 mb-6">
+                    利用先进的AI技术，提供精准的医学影像分析、疾病风险评估和个性化健康方案，助力早发现、早治疗。
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-weixin text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-weibo text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-linkedin text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-youtube-play text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-lg font-bold mb-6">快速链接</h4>
+                <ul class="space-y-3">
+                    <li><a href="#features" class="text-gray-400 hover:text-white transition-colors">功能介绍</a></li>
+                    <li><a href="#how-it-works" class="text-gray-400 hover:text-white transition-colors">使用流程</a></li>
+                    <li><a href="/go_to_upload" class="text-gray-400 hover:text-white transition-colors">上传影像</a></li>
+                    <li><a href="#testimonials" class="text-gray-400 hover:text-white transition-colors">用户评价</a></li>
+                    <li><a href="#faq" class="text-gray-400 hover:text-white transition-colors">常见问题</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-lg font-bold mb-6">服务支持</h4>
+                <ul class="space-y-3">
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">隐私政策</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">使用条款</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">服务协议</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">退款政策</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">帮助中心</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-lg font-bold mb-6">订阅更新</h4>
+                <p class="text-gray-400 mb-4">订阅我们的通讯，获取最新的医疗AI资讯和平台更新</p>
+                <form class="space-y-3">
+                    <div>
+                        <input type="email" placeholder="您的邮箱地址" class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    </div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+                        订阅
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="border-t border-gray-800 pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm">© 2025 智瞳 AI. 保留所有权利。</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">隐私政策</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">使用条款</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Cookie政策</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script>
+    // 导航栏滚动效果
+    window.addEventListener('scroll', function() {
+        const nav = document.getElementById('mainNav');
+        if (window.scrollY > 50) {
+            nav.classList.add('shadow-md');
+            nav.classList.remove('shadow-sm');
+        } else {
+            nav.classList.remove('shadow-md');
+            nav.classList.add('shadow-sm');
+        }
+    });
+
+    // 移动端菜单
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    mobileMenuButton.addEventListener('click', function() {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    // FAQ切换
+    function toggleFaq(button) {
+        const content = button.nextElementSibling;
+        const icon = button.querySelector('i');
+
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            icon.classList.remove('fa-plus');
+            icon.classList.add('fa-minus');
+        } else {
+            content.classList.add('hidden');
+            icon.classList.remove('fa-minus');
+            icon.classList.add('fa-plus');
+        }
+    }
+
+    // 平滑滚动
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const targetId = this.getAttribute('href');
+            if (targetId === '#') return;
+
+            const targetElement = document.querySelector(targetId);
+            if (targetElement) {
+                window.scrollTo({
+                    top: targetElement.offsetTop - 80,
+                    behavior: 'smooth'
+                });
+
+                // 关闭移动端菜单
+                if (!mobileMenu.classList.contains('hidden')) {
+                    mobileMenu.classList.add('hidden');
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

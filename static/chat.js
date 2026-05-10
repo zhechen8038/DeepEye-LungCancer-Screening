@@ -1,0 +1,565 @@
+function appendMessage(rawContent, isBot = false) {
+    const chatBox = document.getElementById('chatBox');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isBot ? 'bot-message' : 'user-message'}`;
+    // 头像
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = isBot ? '医' : '你';
+    // 消息气泡
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble markdown-body';
+    bubble.innerHTML = marked.parse(rawContent); // 使用配置后的 marked
+
+    messageDiv.appendChild(avatar);
+    messageDiv.appendChild(bubble);
+    chatBox.appendChild(messageDiv);
+
+    // 触发代码高亮
+    hljs.highlightAll();
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+    // 增加视频消息特殊处理
+    if (rawContent.includes('video-container')) {
+        bubble.innerHTML = '<div class="video-request-tip">🎥 已发起视频问诊请求</div>';
+        // return; // 不再显示原始HTML
+    }
+}
+async function sendMessage() {
+    const userInput = document.getElementById('userInput');
+    const message = userInput.value.trim();
+    if (!message) return;
+    // 显示用户消息
+    appendMessage(message, false);
+    // 显示加载状态
+    showLoading();
+    userInput.value = '';
+    userInput.disabled = true;
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
+        });
+        const data = await response.json();
+        if (data.error) {
+            appendMessage(`⚠️ 错误：${data.error}`, true);
+        } else {
+            saveHealthRecord(message, data.reply); // 新增此行
+            appendMessage(data.reply, true);
+        }
+    } catch (error) {
+        appendMessage('⚠️ 网络请求失败，请检查网络后重试', true);
+    } finally {
+        // 隐藏加载状态
+        hideLoading();
+        userInput.disabled = false;
+        userInput.focus();
+    }
+
+}
+
+
+// 增强Markdown渲染（在index.html的marked配置）
+
+marked.setOptions({
+    breaks: true,
+    highlight: function(code, lang) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
+    },
+    mangle: false,
+    headerIds: false
+});
+
+// 新增历史记录查看功能
+function showHealthRecords() {
+    const records = JSON.parse(localStorage.getItem('healthRecords') || '[]');
+    const modal = document.getElementById('recordModal');
+    const list = document.getElementById('recordList');
+    list.innerHTML = records.map(r => `
+        <div class="record-item">
+            <div class="record-header">
+                <span class="record-time">${new Date(r.date).toLocaleString()}</span>
+            </div>
+            <div class="record-question">问：${r.q}</div>
+            <div class="record-answer">答：${marked.parse(r.a)}</div>
+        </div>
+    `).join('');
+    modal.style.display = 'block';
+    // 延迟执行代码高亮
+    setTimeout(() => hljs.highlightAll(), 100);
+    const tabHtml = `
+        <div class="record-tabs">
+            <button class="tab active" onclick="switchTab('history')">咨询记录</button>
+            <button class="tab" onclick="switchTab('favorites')">我的收藏</button>
+        </div>
+    `;
+    list.innerHTML = tabHtml + list.innerHTML;
+    // 新增收藏功能按钮
+    document.querySelectorAll('.record-item').forEach(item => {
+        const star = document.createElement('div');
+        star.className = 'favorite-star';
+        star.innerHTML = '☆';
+        star.onclick = toggleFavorite;
+        item.prepend(star);
+    });
+
+}
+// 标签切换功能
+function switchTab(tabName) {
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+        if(tab.textContent.includes(tabName)) tab.classList.add('active');
+    });
+    // 实际应加载不同数据，此处演示用
+    document.querySelectorAll('.record-item').forEach(item => {
+        item.style.display = tabName === 'history' ? 'block' : 'none';
+    });
+}
+
+// 收藏功能
+function toggleFavorite(event) {
+    const star = event.target;
+    star.textContent = star.textContent === '☆' ? '★' : '☆';
+    star.style.color = star.textContent === '★' ? '#ffd700' : 'inherit';
+    // 获取问题内容
+    const record = star.closest('.record-item');
+    const question = record.querySelector('.record-question').textContent;
+    // 获取当前收藏列表
+    const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+    // 检查是否已经收藏
+    const index = favorites.findIndex(item => item.question === question);
+    if (index === -1) {
+        // 如果未收藏，添加到收藏列表
+        favorites.push({ question });
+    } else {
+        // 如果已收藏，从收藏列表中移除
+        favorites.splice(index, 1);
+    }
+    // 更新 localStorage
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+}
+
+function closeRecordModal() {
+    document.getElementById('recordModal').style.display = 'none';
+    // 随机决定是否显示评价弹框
+    const shouldShowRating = Math.random() < 0.5; // 50% 的概率显示评价弹框
+    if (shouldShowRating) {showRatingPopup(); }// 显示评价弹窗
+
+}
+
+function showRatingPopup() {
+    const html = `
+        <div class="rating-stars" id="starContainer">
+            ${Array(5).fill('<span onclick="handleStarClick(event)">☆</span>').join('')}
+        </div>
+        <textarea placeholder="其他建议（可选）"></textarea>
+        <button onclick="submitRating()">提交反馈</button>
+    `;
+    showCustomModal('服务评价', html);
+}
+// 星星点击处理
+let currentRating = 0;
+function handleStarClick(event) {
+    const stars = document.querySelectorAll('#starContainer span');
+    const clickedIndex = Array.from(stars).indexOf(event.target);
+    currentRating = clickedIndex + 1;
+    stars.forEach((star, index) => {
+        star.textContent = index <= clickedIndex ? '★' : '☆';
+        star.style.color = index <= clickedIndex ? '#ffd700' : 'inherit';
+    });
+}
+// 显示自定义模态窗
+function showCustomModal(title, content) {
+    const modalHtml = `
+        <div class="modal" id="customModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>${title}</h2>
+                    <span class="close" onclick="closeModal('customModal')">&times;</span>
+                </div>
+                <div class="modal-body">
+                    ${content}
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById('customModal').style.display = 'block';
+}
+// 修改提交逻辑
+function submitRating() {
+    const feedback = document.querySelector('textarea').value;
+    // 提交时包含currentRating值
+    fetch('/submit-rating', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: currentRating, feedback })
+    });
+    closeModal('customModal');
+    appendMessage('✅ 感谢您的评价！', true);
+}
+// 统一关闭模态窗方法
+// function closeModal(modalId) {
+//     const modal = document.getElementById(modalId);
+//     if(modal) modal.remove();
+// }
+// 替换原有closeModal函数
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if(modal) {
+        modal.style.display = 'none';
+        // 移除动态创建的模态窗（针对评价弹窗）
+        if(modalId === 'customModal') {
+            modal.remove();
+        }
+    }
+}
+
+// 在DOM加载时初始化所有关闭按钮
+document.addEventListener('DOMContentLoaded', () => {
+    // 为所有模态窗添加关闭监听
+    document.querySelectorAll('.modal .close').forEach(closeBtn => {
+        closeBtn.onclick = function() {
+            const modal = this.closest('.modal');
+            if(modal) modal.style.display = 'none';
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 绑定提交按钮事件
+    document.body.addEventListener('click', function(e) {
+        if (e.target.classList.contains('submit-form')) {
+            submitForm();
+        }
+    });
+});
+
+// 新增通用关闭函数
+// function closeModal(modalId) {
+//     document.getElementById(modalId).style.display = 'none';
+// }
+// 初始化主题
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.body.classList.toggle('dark-theme', savedTheme === 'dark');
+    // 初始化粒子颜色
+    const canvas = document.getElementById('particleCanvas');
+    if(canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = savedTheme === 'dark' ? '#1a1a1a' : '#066bf1';
+    }
+}
+// 在DOM加载时调用
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    initParticles();
+});
+
+// 修改toggleDarkMode函数
+function toggleDarkMode() {
+    const body = document.body;
+    body.classList.toggle('dark-theme');
+    localStorage.setItem('theme', body.classList.contains('dark-theme') ? 'dark' : 'light');
+
+    // 更新粒子颜色逻辑
+    const canvas = document.getElementById('particleCanvas');
+    if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = body.classList.contains('dark-theme') ? '#1a1a1a' : '#2385f4';
+    }
+}
+async function generateReport() {
+    showLoading();
+    try {
+        // 获取健康记录
+        const records = JSON.parse(localStorage.getItem('healthRecords') || '[]');
+        // 创建PDF实例
+        const doc = new jspdf.jsPDF();
+        // 设置中文字体（需要加载字体文件）
+        doc.setFont('NotoSansCJKsc-Regular');
+        // 添加标题
+        doc.setFontSize(18);
+        doc.text('健康分析报告', 20, 20);
+        // 添加内容
+        doc.setFontSize(12);
+        let yPosition = 30;
+
+        records.forEach((record, index) => {
+            doc.text(`${index + 1}. ${record.q}`, 20, yPosition);
+            doc.text(`答：${record.a.substring(0, 50)}...`, 25, yPosition + 7);
+            yPosition += 15;
+
+            // 分页处理
+            if(yPosition > 280) {
+                doc.addPage();
+                yPosition = 20;
+            }
+        });
+        // 生成Blob
+        const pdfBlob = doc.output('blob');
+        // 创建下载链接
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `健康报告_${new Date().toLocaleDateString()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        appendMessage('📄 报告已生成并自动下载', true);
+    } catch (error) {
+        console.error('报告生成失败:', error);
+        appendMessage('⚠️ 报告生成失败，请稍后重试', true);
+    } finally {
+        hideLoading();
+    }
+}
+function saveHealthRecord(question, answer) {
+    const records = JSON.parse(localStorage.getItem('healthRecords') || '[]');
+    records.push({
+        date: new Date().toISOString(),
+        q: question,
+        a: answer
+    });
+    localStorage.setItem('healthRecords', JSON.stringify(records));
+}
+function showLoading() {
+    document.getElementById('loading').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loading').style.display = 'none';
+}
+
+function handleEnter(event) {
+    if (event.key === 'Enter') {
+        sendMessage();
+    }
+}
+function fillQuestion(question) {
+    const input = document.getElementById('userInput');
+    input.value = question;
+    input.focus();
+}
+// 修改后的视频通话功能
+let localStream = null;
+
+async function startVideoCall() {
+    try {
+        // 修改后的视频容器
+        const videoContainer = document.createElement('div');
+        videoContainer.className = 'video-call-container';
+        videoContainer.innerHTML = `
+            <div class="video-wrapper">
+                <video class="remote-video" autoplay></video>
+                <video class="local-video" autoplay muted></video>
+                <button class="end-call-btn" onclick="endVideoCall()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"/>
+                        <line x1="23" y1="1" x2="1" y2="23"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+        // 插入到页面底部
+        document.body.appendChild(videoContainer);
+        // 获取媒体设备
+        localStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: 1280, height: 720 },
+            audio: true
+        });
+        // 显示本地视频
+        const localVideo = document.querySelector('.local-video');
+        localVideo.srcObject = localStream;
+        // 模拟远程视频（实际需用WebRTC实现）
+        const remoteVideo = document.querySelector('.remote-video');
+        remoteVideo.srcObject = await navigator.mediaDevices.getUserMedia({ video: true });
+    } catch (error) {
+        console.error('视频通话启动失败:', error);
+        appendMessage('⚠️ 视频通话初始化失败，请检查摄像头权限', true);
+    }
+}
+
+function endVideoCall() {
+    // 关闭所有媒体流
+    const container = document.querySelector('.video-call-container');
+    if (container) {
+        container.style.transform = 'translateY(150%)';
+        setTimeout(() => container.remove(), 300);
+    }
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+    }
+}
+// 医生连线功能
+let connecting = false;
+
+function requestConnect(doctorName) {
+    if (connecting) return;
+
+    appendMessage(`正在申请与${doctorName}连线...`, true);
+    connecting = true;
+
+    // 模拟连线过程
+    setTimeout(() => {
+        appendMessage(
+            `✅ 已成功连接${doctorName}<br>
+            <button class="video-btn" onclick="startVideoCall()">开始视频问诊</button>`,
+            true
+        );
+        connecting = false;
+        document.getElementById('doctorModal').style.display = 'none';
+    }, 2000);
+}
+
+// 粒子动画
+function initParticles() {
+    const canvas = document.getElementById('particleCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const particles = [];
+    const particleCount = 1000;
+    class Particle {
+        constructor() {
+            this.reset();
+        }
+        reset() {
+            this.x = Math.random() * canvas.width;
+            this.y = Math.random() * canvas.height;
+
+            this.vx = (Math.random() - 0.5) * 0.5;
+            this.vy = (Math.random() - 0.5) * 0.5;
+            this.radius = Math.random() * 2;
+            this.alpha = Math.random() * 0.5;
+        }
+        draw() {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(74, 144, 226, ${this.alpha})`;
+            ctx.fill();
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+
+            if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
+            if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+            this.alpha -= 0.005;
+            if(this.alpha <= 0) this.reset();
+        }
+
+    }
+
+    // 初始化粒子
+    for(let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach(particle => {
+            particle.update();
+            particle.draw();
+        });
+
+        requestAnimationFrame(animate);
+    }
+
+    animate();
+}
+
+// 在页面加载完成后初始化
+// document.addEventListener('DOMContentLoaded', () => {
+//     initParticles();
+// });
+// document.addEventListener('DOMContentLoaded', () => {
+//     initTheme();
+//     initParticles();
+// });
+
+// 打开/关闭模态窗
+document.querySelector('.close').onclick = () => {
+    document.getElementById('doctorModal').style.display = 'none';
+}
+window.onclick = (e) => {
+    if (e.target == document.getElementById('doctorModal')) {
+        document.getElementById('doctorModal').style.display = 'none';
+    }
+}
+function transferToHuman() {
+    document.getElementById('doctorModal').style.display = 'block';
+}
+let currentStep = 1;
+
+function showSymptomForm() {
+    document.getElementById('symptomModal').style.display = 'block';
+    initFormSteps();
+}
+
+function initFormSteps() {
+    document.querySelectorAll('.form-step').forEach(step => {
+        step.classList.toggle('active', parseInt(step.dataset.step) === currentStep);
+    });
+}
+// 全局监听所有关闭按钮
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('close')) {
+        const modal = e.target.closest('.modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+});
+// 修改 submitForm 函数
+function submitForm() {
+    const formData = {
+        basic: {
+            age: document.getElementById('age-input').value,
+            gender: document.getElementById('gender-select').value,
+            familyHistory: document.getElementById('family-history-select').value
+        },
+        symptoms: {
+            bleeding: document.getElementById('bleeding-frequency-select').value,
+            pain: document.getElementById('pain-level-select').value
+        },
+        habits: {
+            smoking: document.getElementById('smoking-history-select').value,
+            alcohol: document.getElementById('alcohol-frequency-select').value
+        }
+    };
+
+    console.log('提交数据:', formData); // 调试输出
+
+    fetch('/submit-symptom', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(formData)
+    })
+    .then(response => {
+        // if (!response.ok) throw new Error('网络响应异常');
+        // return response.json();
+        if (!response.ok) {
+        throw new Error(`HTTP错误! 状态码: ${response.status}`); // 显示具体状态码
+    }
+    return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            closeModal('symptomModal');
+            appendMessage(`✅ ${data.message}`, true);
+        } else {
+            appendMessage('⚠️ 提交失败：' + data.message, true);
+        }
+    })
+    .catch(error => {
+        console.error('提交错误:', error);
+        appendMessage('⚠️ 网络错误：' + error.message, true);
+    });
+}

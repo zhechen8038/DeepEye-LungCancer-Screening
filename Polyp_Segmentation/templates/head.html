@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <title>主页头</title>
+    <style>
+        :root {
+            --color-primary: #026A5F; /* 修正：移除了错误的数字3 */
+            --color-assistant: #20C6EA;
+            --color-emphasize-red: #FF3300;
+            --color-emphasize-orange: #FF6600;
+            --color-background-white: #F5F9F9;
+            --color-text-title: #333333;
+            --color-text-main: #666666;
+            --color-text-note: #999999;
+            --color-text-assistant: #CCCCCC;
+            --color-assistant-line: #E5E5E5;
+            --color-title: #28496e;
+            --color-background-blue: #c8e9ff;
+            --primary-blue: #1A73E8;
+            --medical-blue: #0D6EFD;
+            --medical-green: #34A853;
+            --text-dark: #2D3748;
+            --light-blue: #E3F2FD;
+            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+        }
+
+        body {
+            margin-top: 50px;
+        }
+
+        .container1 {
+            position: relative;
+            display: inline-block; /* 使容器的大小适应图片大小 */
+            margin: 0 0;
+            /*border: 1px solid brown;*/
+        }
+
+        .image {
+            display: block; /* 去除img标签的默认间隙 */
+            width: 100%
+        }
+
+        .choose_identity_container {
+            position: absolute;
+            top: 25%;
+            margin-left: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .identity {
+
+            background-color: var(--color-title);
+            color: var(--color-background-white);
+            border-radius: 50px;
+            padding-top: 40px;
+            padding-bottom: 40px;
+            padding-left: 100px;
+            padding-right: 100px;
+            margin: 20px;
+            font-size: 20px;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .identity:hover {
+            transform: scale(1.05);
+            border: 2px solid var(--color-title);
+        }
+
+        .start_analysis {
+            position: absolute;
+            top: 60%;
+            left: 10%;
+            margin-left: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .identity_analysis {
+            background-color: var(--color-title);
+            color: var(--color-background-white);
+            border-radius: 50px;
+            padding-top: 40px;
+            padding-bottom: 40px;
+            padding-left: 100px;
+            padding-right: 100px;
+            margin: 20px;
+            font-size: 20px;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .identity_analysis:hover {
+            transform: scale(1.05);
+            border: 2px solid var(--color-title);
+        }
+
+        .start_seek {
+            position: absolute;
+            top: 93%;
+            left: 53%;
+            margin-left: 50px;
+            display: flex;
+            align-items: center;
+        }
+
+        .identity_seek {
+            background-color: var(--color-title);
+            color: var(--color-background-white);
+            border-radius: 50px;
+            padding-top: 40px;
+            padding-bottom: 40px;
+            padding-left: 100px;
+            padding-right: 100px;
+            margin: 20px;
+            font-size: 20px;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .identity_seek:hover {
+            transform: scale(1.05);
+            border: 2px solid var(--color-title);
+        }
+
+        footer {
+            background: linear-gradient(135deg, #1A3E8C 0%, #1A73E8 100%);
+            color: white;
+            padding: 3rem 0;
+        }
+
+        footer h5 {
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        footer h5::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+        }
+
+        footer p {
+            opacity: 0.9;
+        }
+
+        footer img {
+            filter: brightness(0) invert(1);
+            transition: all 0.3s ease;
+        }
+
+        footer img:hover {
+            transform: translateY(-3px);
+        }
+
+        .navbar {
+            padding: 1rem 0;
+            box-shadow: var(--shadow-sm);
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(10px);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--medical-blue);
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand img {
+            margin-right: 10px;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            background-color: var(--light-blue);
+            color: var(--primary-blue);
+        }
+
+        .nav-link.active {
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        .navbar > .container-xl {
+            display: flex;
+            flex-wrap: inherit;
+            align-items: center;
+            justify-content: space-between;
+
+        }
+
+        #features img {
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        #features img:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+
+        #technology img {
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        #technology img:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+
+        #cases img {
+            border-radius: 1rem;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+        }
+
+        #cases img:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-lg);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light fixed-top">
+    <div class="container-xl">
+        <a class="navbar-brand" href="#">
+            <img src="{{ url_for('static', filename='avatars/default.png') }}" alt="智瞳"
+                 style="height: 40px; width:auto">
+            智瞳
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link active" href="#features">产品介绍</a></li>
+                <li class="nav-item"><a class="nav-link" href="#technology">健康知识科普</a></li>
+                <li class="nav-item"><a class="nav-link" href="#cases">虚拟医生咨询</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container1">
+    <section id="features">
+        <img src="{{ url_for('static', filename='bg_pic/2.png')}}" class="image">
+    </section>
+    <section id="technology">
+        <img src="{{ url_for('static', filename='bg_pic/5.png')}}" class="image">
+    </section>
+    <section id="cases">
+        <img src="{{ url_for('static', filename='bg_pic/7.png')}}" alt="Example Image" class="image">
+    </section>
+    <div class="label">
+    </div>
+    <div class="choose_identity_container">
+        <div class="identity" id="login">登 录</div>
+        <div class="identity" id="register">注 册</div>
+    </div>
+    <div class="start_analysis">
+        <div class="identity_analysis" onclick="window.location.href='/go_to_indexFB'">开始分析</div>
+    </div>
+    <div class="start_seek">
+        <div class="identity_seek" onclick="window.location.href='/go_to_AIpage'">开始咨询</div>
+    </div>
+</div>
+<footer class="bg-dark text-light py-5">
+    <div class="container">
+        <hr class="my-4">
+        <div class="text-center">
+            <p class="mb-0">© 2025 智瞳AI - 结肠息肉智能识别系统. 保留所有权利.</p>
+        </div>
+    </div>
+</footer>
+</body>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $('#login').click(function() {
+        window.location.href = '/go_to_Login'; // 跳转到登录页面
+    });
+
+    $('#register').click(function() {
+        window.location.href = '/go_to_Register'; // 跳转到注册页面
+    });
+</script>
+</html>

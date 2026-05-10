@@ -1,0 +1,26 @@
+[
+  {
+    "id": "20250319014957",
+    "timestamp": "2025-03-19T01:49:57.252152",
+    "original": "20250319014956_156.png",
+    "result": "seg_20250319014956_156.png"
+  },
+  {
+    "id": "691008d7",
+    "original": "691008d7_150.png",
+    "result": "result_691008d7_150.png",
+    "timestamp": "2025-03-18 22:13:25"
+  },
+  {
+    "id": "c0ff7a92",
+    "original": "c0ff7a92_150.png",
+    "result": "result_c0ff7a92_150.png",
+    "timestamp": "2025-03-18 22:13:47"
+  },
+  {
+    "id": "f95517b3",
+    "original": "f95517b3_157.png",
+    "result": "result_f95517b3_157.png",
+    "timestamp": "2025-03-18 22:13:58"
+  }
+]

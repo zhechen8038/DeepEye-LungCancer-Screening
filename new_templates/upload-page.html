@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智瞳 AI - 医学影像上传分析</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        accent: '#7E22CE',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        info: '#06B6D4',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                },
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .text-gradient {
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+            .card-hover {
+                transition: all 0.3s ease;
+            }
+
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            }
+
+            .image-container {
+                position: relative;
+                width: 100%;
+                padding-bottom: 75%; /* 4:3 比例 */
+                overflow: hidden;
+            }
+
+            .image-container img {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                background-color: #f5f5f5;
+            }
+
+            .loading-spinner {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border: 3px solid rgba(255, 255, 255, .3);
+                border-radius: 50%;
+                border-top-color: #fff;
+                animation: spin 1s ease-in-out infinite;
+            }
+
+            @keyframes spin {
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+<!-- 导航栏 -->
+<nav id="mainNav" class="fixed w-full bg-white/90 backdrop-blur-md z-50 transition-all duration-300 shadow-sm">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+            <div class="flex items-center">
+                <a href="/go_to_index" class="flex items-center">
+                    <img src="{{ url_for('static', filename='img/zhitong_logo.jpg') }}" alt="智瞳AI" class="h-8 mr-2">
+                    <span class="text-xl font-bold text-primary">智瞳 AI</span>
+                </a>
+                <div class="hidden sm:ml-10 sm:flex space-x-8">
+                    <a href="{{ url_for('index') }}#features"
+                       class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">功能</a>
+                    <a href="{{ url_for('index') }}#how-it-works"
+                       class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">使用流程</a>
+                    <a href="{{ url_for('index') }}#testimonials"
+                       class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">用户评价</a>
+                    <a href="{{ url_for('index') }}#faq"
+                       class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium transition-colors">常见问题</a>
+                </div>
+            </div>
+            <div class="flex items-center">
+                <a href="/go_to_index "
+                   class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary bg-white hover:bg-gray-50 transition-colors mr-4">
+                    <i class="fa fa-home mr-2"></i>返回首页
+                </a>
+                <a href="/go_to_Login"
+                   class="hidden sm:inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-primary bg-white hover:bg-gray-50 transition-colors">
+                    <i class="fa fa-user-circle mr-2"></i>登录
+                </a>
+                <button type="button"
+                        class="sm:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-primary hover:bg-gray-100 focus:outline-none"
+                        id="mobileMenuButton">
+                    <i class="fa fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移动端菜单 -->
+    <div class="sm:hidden hidden" id="mobileMenu">
+        <div class="px-2 pt-2 pb-3 space-y-1 bg-white shadow-lg">
+            <a href="{{ url_for('index') }}#features"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">功能</a>
+            <a href="{{ url_for('index') }}#how-it-works"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">使用流程</a>
+            <a href="{{ url_for('index') }}#testimonials"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">用户评价</a>
+            <a href="{{ url_for('index') }}#faq"
+               class="block px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">常见问题</a>
+            <a href="/go_to_index"
+               class="block px-3 py-2 text-base font-medium text-primary border border-primary rounded-md mt-4 text-center">
+                <i class="fa fa-home mr-2"></i>返回首页
+            </a>
+            <a href="/go_to_Login"
+               class="block px-3 py-2 text-base font-medium text-primary border border-primary rounded-md text-center">
+                <i class="fa fa-user-circle mr-2"></i>登录
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- 英雄区域 -->
+<header class="pt-24 pb-16 md:pt-32 md:pb-24 bg-gradient-to-br from-primary/5 to-accent/5">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold leading-tight text-dark">
+                <span class="text-gradient bg-gradient-to-r from-primary to-accent">上传医学影像</span>开始分析
+            </h1>
+            <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+                简单几步，获取专业AI分析结果和医疗建议
+            </p>
+            <div class="mt-8">
+                <a href="#upload"
+                   class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                    <i class="fa fa-rocket mr-2"></i>立即上传
+                </a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- 上传区域 -->
+<section id="upload" class="py-16 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2">
+                <div class="p-8 md:p-12 bg-gradient-to-br from-primary to-accent text-white">
+                    <h3 class="text-2xl font-bold mb-6">支持多种影像类型</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <div class="bg-white/20 rounded-full p-1.5 mr-3 mt-0.5">
+                                <i class="fa fa-check text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">超声影像</h4>
+                                <p class="text-white/80 text-sm">乳腺、甲状腺、肝脏等器官检查</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-white/20 rounded-full p-1.5 mr-3 mt-0.5">
+                                <i class="fa fa-check text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">PET-CT</h4>
+                                <p class="text-white/80 text-sm">肿瘤及心脑疾病代谢分析</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="bg-white/20 rounded-full p-1.5 mr-3 mt-0.5">
+                                <i class="fa fa-check text-white"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium">内窥镜影像</h4>
+                                <p class="text-white/80 text-sm">肠胃道、呼吸道等内部器官检查</p>
+                            </div>
+                        </li>
+                    </ul>
+                    <div class="mt-8">
+                        <div class="bg-white/10 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fa fa-shield text-white"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium">隐私安全保障</h4>
+                                    <p class="text-white/80 text-sm">所有上传影像数据加密存储，仅用于诊断目的</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-8 md:p-12">
+                    <form id="uploadForm" class="space-y-6" enctype="multipart/form-data">
+                        <div>
+                            <label for="imageType" class="block text-sm font-medium text-gray-700 mb-1">影像类型</label>
+                            <select id="imageType" name="imageType"
+                                    class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 transition-all">
+                                <option value="">请选择影像类型</option>
+                                <option value="ultrasound">超声</option>
+                                <option value="pet-ct">PET-CT</option>
+                                <option value="endoscopy">内窥镜</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="patientInfo"
+                                   class="block text-sm font-medium text-gray-700 mb-1">患者信息（选填）</label>
+                            <input type="text" id="patientInfo" name="patientInfo" placeholder="年龄、性别、症状等"
+                                   class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">上传影像</label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-primary transition-colors cursor-pointer"
+                                 id="dropZone">
+                                <div class="space-y-1 text-center">
+                                    <i class="fa fa-cloud-upload text-4xl text-gray-400"></i>
+                                    <div class="flex text-sm text-gray-600">
+                                        <label for="fileUpload"
+                                               class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none">
+                                            <span>上传影像文件</span>
+                                            <input id="fileUpload" name="file" type="file" accept=".jpg,.jpeg,.png,.bmp"
+                                                   class="sr-only">
+                                        </label>
+                                        <p class="pl-1">或拖放文件</p>
+                                    </div>
+                                    <p class="text-xs text-gray-500">
+                                        支持 JPG, PNG, BMP, JEPG 格式
+                                    </p>
+                                </div>
+                            </div>
+                            <div id="filePreview" class="mt-4 hidden">
+                                <div class="bg-gray-50 p-3 rounded-md flex items-center">
+                                    <i class="fa fa-file-image-o text-primary mr-3"></i>
+                                    <div class="flex-1">
+                                        <p id="fileName" class="font-medium text-gray-900 truncate"></p>
+                                        <p id="fileSize" class="text-sm text-gray-500"></p>
+                                    </div>
+                                    <button type="button" id="removeFile"
+                                            class="text-gray-400 hover:text-gray-500 focus:outline-none">
+                                        <i class="fa fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="submit" id="submitBtn"
+                                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+                                <i class="fa fa-paper-plane mr-2"></i>提交分析
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="bg-dark text-white pt-16 pb-8">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+            <div>
+                <div class="flex items-center mb-6">
+                    <img src="{{ url_for('static', filename='img/zhitong_logo.jpg') }}" alt="智瞳AI" class="h-8 mr-2">
+                    <span class="text-xl font-bold">智瞳 AI</span>
+                </div>
+                <p class="text-gray-400 mb-6">
+                    利用先进的AI技术，提供精准的医学影像分析、疾病风险评估和个性化健康方案，助力早发现、早治疗。
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-weixin text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-weibo text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-linkedin text-xl"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-youtube-play text-xl"></i>
+                    </a>
+                </div>
+            </div>
+            <div>
+                <h4 class="text-lg font-bold mb-6">快速链接</h4>
+                <ul class="space-y-3">
+                    <li><a href="{{ url_for('index') }}#features"
+                           class="text-gray-400 hover:text-white transition-colors">功能介绍</a></li>
+                    <li><a href="{{ url_for('index') }}#how-it-works"
+                           class="text-gray-400 hover:text-white transition-colors">使用流程</a></li>
+                    <li><a href="/go_to_upload" class="text-gray-400 hover:text-white transition-colors">上传影像</a>
+                    </li>
+                    <li><a href="{{ url_for('index') }}#testimonials"
+                           class="text-gray-400 hover:text-white transition-colors">用户评价</a></li>
+                    <li><a href="{{ url_for('index') }}#faq" class="text-gray-400 hover:text-white transition-colors">常见问题</a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-lg font-bold mb-6">服务支持</h4>
+                <ul class="space-y-3">
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">隐私政策</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">使用条款</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">服务协议</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">退款政策</a></li>
+                    <li><a href="#" class="text-gray-400 hover:text-white transition-colors">帮助中心</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-lg font-bold mb-6">订阅更新</h4>
+                <p class="text-gray-400 mb-4">订阅我们的通讯，获取最新的医疗AI资讯和平台更新</p>
+                <form class="space-y-3">
+                    <div>
+                        <input type="email" placeholder="您的邮箱地址"
+                               class="w-full px-4 py-2 rounded-md bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    </div>
+                    <button type="submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all">
+                        订阅
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="border-t border-gray-800 pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm">© 2025 智瞳 AI. 保留所有权利。</p>
+                <div class="flex space-x-6 mt-4 md:mt-0">
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">隐私政策</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">使用条款</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Cookie政策</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script>
+    // 导航栏滚动效果
+    window.addEventListener('scroll', function () {
+        const nav = document.getElementById('mainNav');
+        if (window.scrollY > 50) {
+            nav.classList.add('shadow-md');
+            nav.classList.remove('shadow-sm');
+        } else {
+            nav.classList.remove('shadow-md');
+            nav.classList.add('shadow-sm');
+        }
+    });
+
+    // 移动端菜单
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    mobileMenuButton.addEventListener('click', function () {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    // 文件上传
+    const dropZone = document.getElementById('dropZone');
+    const fileUpload = document.getElementById('fileUpload');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const removeFile = document.getElementById('removeFile');
+    const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    // 当前上传的文件
+    let currentFile = null;
+
+    // 拖放功能
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+        dropZone.classList.add('border-primary');
+        dropZone.classList.add('bg-primary/5');
+    }
+
+    function unhighlight() {
+        dropZone.classList.remove('border-primary');
+        dropZone.classList.remove('bg-primary/5');
+    }
+
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+    }
+
+    fileUpload.addEventListener('change', function () {
+        handleFiles(this.files);
+    });
+
+    function handleFiles(files) {
+        if (files.length > 0) {
+            currentFile = files[0];
+            fileName.textContent = currentFile.name;
+            fileSize.textContent = formatFileSize(currentFile.size);
+            filePreview.classList.remove('hidden');
+            dropZone.classList.add('hidden');
+        }
+    }
+
+    removeFile.addEventListener('click', function () {
+        fileUpload.value = '';
+        filePreview.classList.add('hidden');
+        dropZone.classList.remove('hidden');
+        currentFile = null;
+    });
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // 表单提交
+    uploadForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        if (!currentFile) {
+            alert('请先选择要上传的图片');
+            return;
+        }
+
+        // 获取用户选择的影像类型
+        const imageType = document.getElementById('imageType').value;
+        if (!imageType) {
+            alert('请选择影像类型');
+            return;
+        }
+
+        // 映射影像类型到后端模型类型
+        const modelTypeMap = {
+            'ultrasound': 'breast',  // 超声使用乳腺癌模型
+            'pet-ct': 'polyp',      // PET-CT使用息肉模型
+            'endoscopy': 'polyp'    // 内窥镜使用息肉模型
+        };
+
+        const modelType = modelTypeMap[imageType];
+
+        // 显示加载状态
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="loading-spinner"></span> 分析中...';
+
+        try {
+            const formData = new FormData();
+            formData.append('file', currentFile);
+            formData.append('modelType', modelType);  // 添加模型类型参数
+            formData.append('patientInfo', document.getElementById('patientInfo').value);
+
+            // 发送到后端API
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                // 尝试解析JSON错误信息
+                try {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || '上传失败: ' + response.statusText);
+                } catch (jsonError) {
+                    throw new Error('上传失败: ' + response.statusText);
+                }
+            }
+
+            const data = await response.json();
+
+            // 将分析结果存储在localStorage中
+            localStorage.setItem('analysisResult', JSON.stringify(data));
+
+            // 跳转到分析结果页面
+            window.location.href = "{{ url_for('analyse_page') }}";
+
+        } catch (error) {
+            console.error('上传错误:', error);
+            alert('上传失败: ' + error.message);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa fa-paper-plane mr-2"></i>提交分析';
+        }
+    });
+</script>
+</body>
+</html>
